@@ -1,0 +1,95 @@
+elements:
+  - type: 1
+    element: H
+    count: 1200
+    lmp: type 1
+    gmx: name H*
+  - type: 2
+    element: Li
+    count: 200
+    lmp: type 2
+    gmx: name Li*
+  - type: 3
+    element: C
+    count: 1400
+    lmp: type 3
+    gmx: name C*
+  - type: 4
+    element: N
+    count: 200
+    lmp: type 4
+    gmx: name N*
+  - type: 5
+    element: O
+    count: 2000
+    lmp: type 5
+    gmx: name O*
+  - type: 6
+    element: F
+    count: 1200
+    lmp: type 6
+    gmx: name F*
+  - type: 7
+    element: S
+    count: 400
+    lmp: type 7
+    gmx: name S*
+molecules:
+  - resname: FEC
+    n_molecules: 200
+    n_atoms: 1600
+    lmp_mol_range: 401-600
+    lmp: mol 401-600
+    gmx: resname FEC
+  - resname: FEMC
+    n_molecules: 200
+    n_atoms: 3000
+    lmp_mol_range: 601-800
+    lmp: mol 601-800
+    gmx: resname FEMC
+  - resname: FSI
+    n_molecules: 200
+    n_atoms: 1800
+    lmp_mol_range: 201-400
+    lmp: mol 201-400
+    gmx: resname FSI
+  - resname: LI
+    n_molecules: 200
+    n_atoms: 200
+    lmp_mol_range: 1-200
+    lmp: mol 1-200
+    gmx: resname LI
+candidate_module_selections:
+  rdf:
+    - sel1: type 2
+      sel2: type 5
+      note: Li-O
+    - sel1: type 2
+      sel2: type 4
+      note: Li-N
+    - sel1: type 2
+      sel2: type 6
+      note: Li-F
+    - sel1: type 2
+      sel2: type 7
+      note: Li-S
+  density:
+    - sel: all
+      axis: z
+      note: mass density profile
+  msd:
+    - sel: type 2
+    - sel: type 3
+    - sel: type 5
+  agg_cluster:
+    - sel1: type 2
+      sel2: type 4
+      note: Li-FSI graph (N as anion center)
+  hbond:
+    - note: no O-H donor in sys1; use FEC/FEMC C-H as donor if needed
+  probe:
+    - sel: all
+      note: FFV/PSD; H2 probe radius 1.445 A
+  transport:
+    - note: requires vx vy vz columns in dump (this sample has none)
+_note: LAMMPS 无 resname；分子选择用 mol 区间或按 type。GROMACS 样例 .gro/.xtc 仅为坐标级回归；权威逐原子拓扑见 .mapping.csv（.gro 读回时 Li 质量会被猜测为 0，属已知限制）。

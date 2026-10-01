@@ -1,0 +1,55 @@
+{
+  "prefix": "sys1_reduced",
+  "checks": {
+    "lmp_natoms": {
+      "ok": true,
+      "detail": "6600"
+    },
+    "natoms_equal": {
+      "ok": true,
+      "detail": "6600 vs 6600"
+    },
+    "lmp_has_charges": {
+      "ok": true,
+      "detail": "sum|q|=2146.444"
+    },
+    "lmp_net_charge": {
+      "ok": true,
+      "detail": "net=2.00e-04"
+    },
+    "lmp_bonds_nonzero": {
+      "ok": true,
+      "detail": "6000"
+    },
+    "frame_max_dev_A": {
+      "ok": true,
+      "detail": "9.54e-07 over 5 frames"
+    },
+    "box_equal": {
+      "ok": true,
+      "detail": "[135.419 135.419 135.419  90.     90.     90.   ]"
+    },
+    "type_element_consistency": {
+      "ok": true,
+      "detail": "1.0000"
+    },
+    "element_counts_equal": {
+      "ok": true,
+      "detail": "lmp={'Li': 200, 'N': 200, 'S': 400, 'O': 2000, 'F': 1200, 'C': 1400, 'H': 1200} gmx={'Li': 200, 'N': 200, 'S': 400, 'O': 2000, 'F': 1200, 'C': 1400, 'H': 1200}"
+    },
+    "Li_selection_equal": {
+      "ok": true,
+      "detail": "lmp=200 gmx=200"
+    }
+  },
+  "ok": true,
+  "type2element": {
+    "1": "H",
+    "2": "Li",
+    "3": "C",
+    "4": "N",
+    "5": "O",
+    "6": "F",
+    "7": "S"
+  }
+}

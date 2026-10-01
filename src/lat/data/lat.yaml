@@ -1,0 +1,300 @@
+# =============================================================================
+# lat.yaml — 唯一配置来源（开发人员用，位于程序根目录）
+# -----------------------------------------------------------------------------
+# 规则（M11 + 决策18）：
+#   * 本文件由开发人员维护，定义默认值/单位/文档入口/输出模板；用户不编辑它。
+#   * 所有“物理”参数都必须同时有命令行开关；命令行覆盖本文件。
+#   * 代码中不得出现任何 backup 默认值；本文件缺键/类型不符 → ERROR 中断。
+#   * 单位：默认长度 Å（real/metal 都是 Å）；未显式给 unit 时报 INFO。
+# =============================================================================
+
+meta:
+  version: 0.1.0
+  units:                     # 内部统一单位
+    length: Angstrom
+    time: frame              # M2：时间即帧号，忽略 LAMMPS 时间字段
+    mass: g/mol
+    charge: e
+    energy: kJ/mol           # 仅标注；本工具大部分不涉及能量
+    temperature: K
+    density: kg/m^3
+    diffusion: 1e-5 cm^2/s
+    conductivity: S/m
+  frame_interval: null       # 帧间距(ps)，仅用于“换算展示”寿命/滞留；null=只报帧数
+
+io:
+  # LAMMPS data/dump 文件都不携带 units/atom_style，必须显式或推断。
+  default_unit: real         # real|metal|lj|si|cgs；未显式给 -unit 时用此值并报 INFO
+  data_style: auto           # auto|atomic|charge|molecular|bond|angle|full
+                             #   5列=atomic, 7列=full；6列歧义需 -style
+  dump_fields: auto          # 从 ITEM: ATOMS 行解析
+  pbc: true                  # 隐藏开关 -pbc；默认开
+  unwrap: false              # msd/transport 显式打开
+  triclinic: true
+  backup_on_conflict: true   # 同名输出已存在 → 旧文件改名 .bak.1/.bak.2...
+
+# type -> element：默认由质量 ±0.2% 匹配元素表推断；多解/无解 → ERROR。
+# 需要时用户可用 -types 文件显式覆盖。
+element_match_tolerance: 0.002
+
+grid:
+  nbins_1d: 200
+  dr_3d: 1.0                 # Angstrom
+  max_bins_axis: 500
+
+plot:
+  smooth: none               # none|gaussian|savgol（只在 plot1d/plot2d 执行）
+  savgol_window: 5
+  savgol_order: 2
+  gaussian_sigma: 1.0
+
+output:
+  # 命名：<basename>.<tag>.<mode>.out.csv（命名即意图）
+  # 例：mysystem.rdf.cn.out.csv, mysystem.rg.out.csv, mysystem.rdf_Li_FSI.out.csv
+  ext: csv
+  suffix: out
+  header_prefix: "#"
+  atomic_write: true
+  float_format: "%.6g"
+  include_audit: true        # 默认审计信息写进文件头（不主动屏显）
+  debug_json: false          # -debug 时额外落一份完整 JSON 审计（对外文档不暴露）
+
+logger:
+  # 不用退出码；只用 INFO/WARNING/ERROR 级别（ERROR 表示中断）。
+  # 全部输出到 stderr，绝不污染 stdout/CSV。
+  level: warning             # 默认只报 WARNING/ERROR；INFO 需 -v 才出
+  stream: stderr
+
+# vdW 半径（按元素符号，Å），probe 用。
+# 来源：reax_tools 的 ELEMENT_ATOMIC_RADII（Bondi 型）
+#   /mnt/d/CurrentProjects/reax_tools/src/cpp/argparser.cpp:62
+# 注意：reax_tools 用它配合 0.6*(ri+rj) 做键感知；probe 探针占据用纯 vdW，不加因子。
+# vdW 半径表（Å），来源：reax_tools ELEMENT_ATOMIC_RADII（argparser.cpp）。
+# 全周期表覆盖；probe/sasa/pistack 需要时查表。
+vdw:
+  H: 1.05
+  He: 1.40
+  Li: 1.82
+  Be: 2.00
+  B: 2.00
+  C: 1.70
+  N: 1.55
+  O: 1.70
+  F: 1.35
+  Ne: 1.54
+  Na: 1.36
+  Mg: 1.18
+  Al: 2.00
+  Si: 2.10
+  P: 1.80
+  S: 1.80
+  Cl: 2.27
+  Ar: 1.88
+  K: 1.76
+  Ca: 1.37
+  Sc: 2.00
+  Ti: 2.00
+  V: 2.00
+  Cr: 2.00
+  Mn: 2.00
+  Fe: 2.00
+  Co: 2.00
+  Ni: 1.63
+  Cu: 1.90
+  Zn: 1.39
+  Ga: 1.07
+  Ge: 2.00
+  As: 1.85
+  Se: 1.90
+  Br: 1.85
+  Kr: 2.02
+  Rb: 2.00
+  Sr: 2.00
+  Y: 2.00
+  Zr: 2.00
+  Nb: 2.00
+  Mo: 2.00
+  Tc: 2.00
+  Ru: 2.00
+  Rh: 2.00
+  Pd: 1.63
+  Ag: 1.72
+  Cd: 1.58
+  In: 1.93
+  Sn: 2.17
+  Sb: 2.00
+  Te: 2.06
+  I: 1.98
+  Xe: 2.16
+  Cs: 2.10
+  Ba: 2.00
+  La: 2.00
+  Ce: 2.00
+  Pr: 2.00
+  Nd: 2.00
+  Pm: 2.00
+  Sm: 2.00
+  Eu: 2.00
+  Gd: 2.00
+  Tb: 2.00
+  Dy: 2.00
+  Ho: 2.00
+  Er: 2.00
+  Tm: 2.00
+  Yb: 2.00
+  Lu: 2.00
+  Hf: 2.00
+  Ta: 2.00
+  W: 2.00
+  Re: 2.00
+  Os: 2.00
+  Ir: 2.00
+  Pt: 1.72
+  Au: 1.66
+  Hg: 1.55
+  Tl: 1.96
+  Pb: 2.02
+  Bi: 2.00
+  Po: 2.00
+  At: 2.00
+  Rn: 2.00
+  Fr: 2.00
+  Ra: 2.00
+  Ac: 2.00
+  Th: 2.00
+  Pa: 2.00
+  U: 2.00
+  Np: 2.00
+  Pu: 2.00
+  Am: 2.00
+  Cm: 2.00
+  Bk: 2.00
+  Cf: 2.00
+  Es: 2.00
+  Fm: 2.00
+  Md: 2.00
+  No: 2.00
+  Lr: 2.00
+  Rf: 2.00
+  Db: 2.00
+  Sg: 2.00
+  Bh: 2.00
+  Hs: 2.00
+  Mt: 2.00
+  Ds: 2.00
+  Rg: 2.00
+  Cn: 2.00
+  Nh: 2.00
+  Fl: 2.00
+  Mc: 2.00
+  Lv: 2.00
+  Ts: 2.00
+  Og: 2.00
+
+# 元素质量表（用于 type->element 质量匹配），来源：IUPAC 标准原子量（ase.data）。
+# 注意：不可用 reax_tools 的 ELEMENT_MASS——其 Li=7.0 与 6.94 相差 0.86%，会超出 ±0.2%。
+element_mass:
+  H: 1.008
+  C: 12.011
+  N: 14.007
+  O: 15.999
+  F: 18.998403
+  Li: 6.94
+  P: 30.973762
+  S: 32.06
+  Cl: 35.45
+  # 其余元素实现时以 ase.data 整表补全。
+
+modules:
+  rdf:
+    help: docs/MANUAL_ALGORITHMS.md
+    nbins: 200
+    cutoff: 10.0             # Å（默认，限制计算量；不随盒子膨胀）
+    intramolecular: false    # 默认排除同分子内对；-intramol 打开（true=包含分子内）
+    normalization: number_density
+    compute_coordination: true
+
+  density:
+    help: docs/MANUAL_ALGORITHMS.md
+    dim: 1
+    nbins: 200
+    axis: z
+    quantity: mass           # mass|number
+
+  hbond:
+    help: docs/MANUAL_ALGORITHMS.md
+    distance: 3.5            # Å；对齐 gmx 默认（D···A, -da yes）
+    distance_mode: DA        # DA（gmx 默认）| HA
+    angle: 30                # deg；判据 D-H...A > 180-angle = >150
+    nbins: 50
+    compute_lifetime: true
+
+  rms:
+    help: docs/MANUAL_ALGORITHMS.md
+    ref: first
+    rmsf: true
+
+  msd:
+    help: docs/MANUAL_ALGORITHMS.md
+    dim: 3                   # 3|2
+    fit_range: null
+    remove_com: true         # 默认去质心漂移
+    seltype: atom            # atom | mol_com（对齐 gmx msd -seltype mol_com）
+
+  agg:
+    help: docs/MANUAL_ALGORITHMS.md
+    mode: min                # min|center
+    cutoff: null             # 必填：用户必须显式给（P0 决策）
+    solv: null
+    edge_conservation_tol: 0.02
+
+  cluster:
+    help: docs/MANUAL_ALGORITHMS.md
+    mode: min
+    cutoff: null             # 必填
+    focus: false
+
+  pistack:
+    help: docs/MANUAL_ALGORITHMS.md
+    distance: 5.5            # Å（沿用已验证代码的量纲换算）
+    angle: 30
+
+  probe:
+    help: docs/MANUAL_ALGORITHMS.md
+    radius: 1.445            # Å；H2 动力学直径 2.89 Å 的一半
+    mode: all                # ffv|psd|porosity|connectivity|sasa|all
+    grid_dr: 0.5             # Å
+    connectivity: 6          # 6|26
+    sasa_points: 92          # Shrake-Rupley sphere sampling points
+
+  residence:
+    help: docs/MANUAL_ALGORITHMS.md
+    mode: min
+    cutoff: null             # 必填
+    definition: both         # cont|inter|both
+
+  transport:
+    help: docs/MANUAL_ALGORITHMS.md
+    require_velocity: true
+    remove_com: true
+    methods: [NE, GK]
+    temperature: null        # K；NE/GK 需要（必需，故默认空）
+    velocity_unit: A/ps      # dump 速度单位：A/ps | A/fs（LAMMPS units 不随文件传递）
+
+  occupancy:
+    help: docs/MANUAL_ALGORITHMS.md
+    zone: null               # 必填；语义 -zone x/y/z:min-max[,min-max][ ...]
+                             # 支持多维度：如 "-zone z:0-10,10-20 x:0-5"
+                             # 后续 P2：以分子体积自动生成 zone
+
+  gyrate:
+    help: docs/MANUAL_ALGORITHMS.md
+
+  contact:
+    help: docs/MANUAL_ALGORITHMS.md
+    mode: min
+    cutoff: null             # 必填
+
+  order:                     # P2：参考轴定义不确定，暂缓
+    help: docs/MANUAL_ALGORITHMS.md
+    axis: z

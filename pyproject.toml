@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lat"
+version = "0.1.0"
+description = "LAMMPS Analysis Tool (LAMMPS + GROMACS trajectory analysis)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Proprietary"}
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "pyyaml>=5.4",
+    "matplotlib>=3.5",
+    "MDAnalysis>=2.4",
+    "ase>=3.22",
+]
+
+[project.scripts]
+lat = "lat.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+lat = ["data/*.yaml"]

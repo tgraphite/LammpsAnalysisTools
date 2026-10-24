@@ -74,7 +74,8 @@ def main():
          "note": "Li-FSI graph (N as anion center)"}
     ]
     sel["hbond"] = [{"note": "no O-H donor in sys1; use FEC/FEMC C-H as donor if needed"}]
-    sel["probe"] = [{"sel": "all", "note": "FFV/PSD; H2 probe radius 1.445 A"}]
+    sel["freevol"] = [{"note": "FFV/PSD/connectivity; grid modes have no -sel"}]
+    sel["sasa"] = [{"sel": "all", "note": "H2 probe radius 1.445 A"}]
     sel["transport"] = [{"note": "requires vx vy vz columns in dump (this sample has none)"}]
     out["candidate_module_selections"] = sel
     out["_note"] = ("LAMMPS 无 resname；分子选择用 mol 区间或按 type。"

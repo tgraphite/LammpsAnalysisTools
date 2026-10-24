@@ -48,7 +48,7 @@ class Cluster(Module):
         warnings: list[str] = []
         for fr in ctx.frames(frames):
             pos = fr.positions
-            e = edges(pos, aa, ba, fr.box, float(cutoff), mode)
+            e = edges(pos, aa, ba, fr.box, float(cutoff), mode, ctx.topo)
             comp = Components(len(am), len(bm), e)
             for a in range(len(am)):
                 cnt_dist[comp.deg_a.get(a, 0)] += 1

@@ -9,13 +9,12 @@
 # =============================================================================
 
 meta:
-  version: 0.1.0
+  version: 0.2.0
   units:                     # 内部统一单位
     length: Angstrom
     time: frame              # M2：时间即帧号，忽略 LAMMPS 时间字段
     mass: g/mol
     charge: e
-    energy: kJ/mol           # 仅标注；本工具大部分不涉及能量
     temperature: K
     density: kg/m^3
     diffusion: 1e-5 cm^2/s
@@ -25,9 +24,7 @@ meta:
 io:
   # LAMMPS data/dump 文件都不携带 units/atom_style，必须显式或推断。
   default_unit: real         # real|metal|lj|si|cgs；未显式给 -unit 时用此值并报 INFO
-  data_style: auto           # auto|atomic|charge|molecular|bond|angle|full
                              #   5列=atomic, 7列=full；6列歧义需 -style
-  dump_fields: auto          # 从 ITEM: ATOMS 行解析
   pbc: true                  # 隐藏开关 -pbc；默认开
   unwrap: false              # msd/transport 显式打开
   triclinic: true
@@ -36,11 +33,6 @@ io:
 # type -> element：默认由质量 ±0.2% 匹配元素表推断；多解/无解 → ERROR。
 # 需要时用户可用 -types 文件显式覆盖。
 element_match_tolerance: 0.002
-
-grid:
-  nbins_1d: 200
-  dr_3d: 1.0                 # Angstrom
-  max_bins_axis: 500
 
 plot:
   smooth: none               # none|gaussian|savgol（只在 plot1d/plot2d 执行）
@@ -65,12 +57,12 @@ logger:
   level: warning             # 默认只报 WARNING/ERROR；INFO 需 -v 才出
   stream: stderr
 
-# vdW 半径（按元素符号，Å），probe 用。
+# vdW 半径（按元素符号，Å），freevol/sasa 用。
 # 来源：reax_tools 的 ELEMENT_ATOMIC_RADII（Bondi 型）
 #   /mnt/d/CurrentProjects/reax_tools/src/cpp/argparser.cpp:62
-# 注意：reax_tools 用它配合 0.6*(ri+rj) 做键感知；probe 探针占据用纯 vdW，不加因子。
+# 注意：reax_tools 用它配合 0.6*(ri+rj) 做键感知；freevol/sasa 的探针占据用纯 vdW，不加因子。
 # vdW 半径表（Å），来源：reax_tools ELEMENT_ATOMIC_RADII（argparser.cpp）。
-# 全周期表覆盖；probe/sasa/pistack 需要时查表。
+# 全周期表覆盖；freevol/sasa/pistack 需要时查表。
 vdw:
   H: 1.05
   He: 1.40
@@ -259,13 +251,19 @@ modules:
     distance: 5.5            # Å（沿用已验证代码的量纲换算）
     angle: 30
 
-  probe:
+  freevol:
     help: docs/MANUAL_ALGORITHMS.md
     radius: 1.445            # Å；H2 动力学直径 2.89 Å 的一半
-    mode: all                # ffv|psd|porosity|connectivity|sasa|all
+    mode: ffv                # ffv|psd|connectivity（网格分析需正交且固定盒）
     grid_dr: 0.5             # Å
-    connectivity: 6          # 6|26
-    sasa_points: 92          # Shrake-Rupley sphere sampling points
+    connectivity: 26         # 6|26；自由空间默认 26（6 连通固体的补集）
+    psd_rmax: null           # Å；PSD 上界，null = 由数据决定
+    components: false        # true 时另写逐分量表
+
+  sasa:
+    help: docs/MANUAL_ALGORITHMS.md
+    radius: 1.445            # Å；探针半径
+    sasa_points: 92          # Shrake-Rupley 球面采样点数
 
   residence:
     help: docs/MANUAL_ALGORITHMS.md

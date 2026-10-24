@@ -7,16 +7,6 @@ import numpy as np
 from .errors import LatError
 
 
-def axis_bins(length: float, nbins: int, max_bins: int) -> int:
-    if nbins < 1:
-        raise LatError(f"nbins must be >= 1, got {nbins}")
-    if length <= 0:
-        raise LatError(f"cannot grid a non-positive axis length ({length})")
-    if nbins > max_bins:
-        raise LatError(f"nbins={nbins} exceeds max_bins_axis={max_bins}")
-    return int(nbins)
-
-
 def rdf_bins(nbins: int, cutoff: float):
     edges = np.linspace(0.0, float(cutoff), int(nbins) + 1)
     r = 0.5 * (edges[:-1] + edges[1:])

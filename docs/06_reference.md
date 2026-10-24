@@ -11,7 +11,7 @@
 | `gmx hbond` | D–H···A 几何判据、`-ac` 存在函数自相关、`-life` 寿命（间断/连续两种解读）、`-dist/-ang` |
 | `gmx msd` | 去 PBC 解包、Einstein 拟合、`-type`（3D/xy） |
 | `gmx rms/rmsf` | Kabsch 对齐与逐原子涨落 |
-| `gmx freevolume` | **探针插入**：以 vdW 半径判占据、`-radius` 探针半径（`lat probe` 的算法基础） |
+| `gmx freevolume` | **探针插入**：以 vdW 半径判占据、`-radius` 探针半径（`lat freevol -mode psd` 的算法基础） |
 | `gmx sasa` | 探针可及表面积（Shrake–Rupley 类） |
 
 注意：GROMACS 的分析输出为 `.xvg`；lat 输出为自有 CSV 契约（见 04）。
@@ -52,7 +52,7 @@
 
 - 来源：`reax_tools`（本机 `/mnt/d/CurrentProjects/reax_tools`，公认反应网络基准）。
 - 文件：`src/cpp/argparser.cpp:62` 的 `ELEMENT_ATOMIC_RADII`（元素符号 → Å，Bondi 型）。
-- `reax_tools` 用 `d < 0.6·(r_i+r_j)`（`RVDW_FACTOR=1.2`）做键感知；lat 的 **probe 探针占据用纯 vdW 半径，不加因子**。
+- `reax_tools` 用 `d < 0.6·(r_i+r_j)`（`RVDW_FACTOR=1.2`）做键感知；lat 的 **freevol/sasa 探针占据用纯 vdW 半径，不加因子**。
 - lat 的 vdW 表以 nm 为单位整表复制进 `config/lat.yaml:vdw`；按元素符号索引，需先建立 `type→element` 映射。
 
 ## 8. 回归数据

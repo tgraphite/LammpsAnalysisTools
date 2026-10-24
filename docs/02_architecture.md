@@ -95,7 +95,7 @@ CLI 参数  >  config/lat.yaml  >  FATAL
 | P0 | core：io/topology/selection/pbc/grid/correlate/output + `select` + `plot1d/2d` | 读 LAMMPS data/lammpstrj + gmx xtc；`select` 正确；输出契约成型 |
 | P1 | `rdf` `density` `msd` `rms` | 对 40/11-systems 的 gmx xvg 数值回归 |
 | P2 | `hbond` `agg` `cluster` `pistack` | hbond 自造体系点数；agg 用 Li-FSI；pistack 用现有测试 |
-| P3 | `gyrate` `contact` `order` `probe` `residence` | 各自小体系 |
+| P3 | `gyrate` `contact` `order` `freevol` `sasa` `residence` | 各自小体系 |
 | P4 | `transport` `occupancy` | 速度列/区域事件 |
 
 ## 9. 测试契约

@@ -12,11 +12,18 @@ from ..core.correlate import linear_fit
 from ..core.errors import LatError
 from ..core.grid import box_change_warning, fractional_bins
 from ..core.neighbor import pairs_within
+from ..core.periodic import periodic_vector
 from ..core.table import Field, Table
 from .base import Module, Param
 from . import register
 
-_ACCEPTORS = {"N", "O", "F", "S", "Cl", "Br", "I"}
+# Heavy atoms that can take part in a hydrogen bond, as donor or as acceptor.
+# gmx hbond restricts donors to this electronegative set too: a C-H is not a
+# donor.  Treating every heavy atom with an H neighbour as a donor made every
+# methylene/methyl carbon in PET a donor and inflated the count ~10x
+# (41.7 vs 4.3 per frame measured against gmx hbond on a 4-chain PET box).
+_POLAR = {"N", "O", "F", "S", "Cl", "Br", "I"}
+_ACCEPTORS = _POLAR
 
 
 def _adjacency(n_atoms, bonds):
@@ -139,7 +146,7 @@ def _mask(ctx, literal, topo):
 def _donors(elem, adj, group):
     donors, hydrogens = {}, {}
     for i in range(len(elem)):
-        if not group[i] or elem[i] == "H":
+        if not group[i] or elem[i] not in _POLAR:
             continue
         hs = [j for j in adj[i] if elem[j] == "H" and group[j]]
         if hs:
@@ -171,9 +178,9 @@ def _frame_hbonds(donors, acceptors, pos, box, distance, mode, angle, same, bond
         return triples, mids
 
     def _emit(d, h, a):
-        vdh = box.minimum_image(pos[h] - pos[d])
+        vdh = periodic_vector(pos[h], pos[d], box)
         ndh = float(np.linalg.norm(vdh))
-        vda = box.minimum_image(pos[a] - pos[d])
+        vda = periodic_vector(pos[a], pos[d], box)
         nda = float(np.linalg.norm(vda))
         if ndh == 0 or nda == 0:
             return
@@ -183,7 +190,7 @@ def _frame_hbonds(donors, acceptors, pos, box, distance, mode, angle, same, bond
         # midpoint of D and its periodic image nearest to A (then wrapped back
         # into the cell so a boundary-straddling bond is not dropped by the
         # histogram). The image of D nearest A is A + MI(D - A).
-        mid = pos[a] + 0.5 * box.minimum_image(pos[d] - pos[a])
+        mid = pos[a] + 0.5 * periodic_vector(pos[d], pos[a], box)
         mids.append(box.wrap(mid))
 
     if mode == "DA":
@@ -239,15 +246,30 @@ def _acf(triple_frames):
     for lag in range(T):
         num = (present[:, : T - lag] & present[:, lag:]).sum()
         C_inter[lag] = num * T / ((T - lag) * total) if T > lag else 0.0
+    # Continuous ACF: every frame in [0, lag] must be occupied. Computed
+    # incrementally (R_lag = R_{lag-1} shrunk to T-lag AND present shifted by
+    # lag) and, crucially, restricted to the pairs still running: a pair that
+    # is not continuously present for `lag` frames can never contribute to a
+    # longer lag, so it is dropped. The naive form (re-ANDing lag+1 slices for
+    # every lag over *all* pairs) is O(T^2) numpy calls and ran for tens of
+    # minutes past the frame loop on a 601-frame, 4080-donor system.
     C_cont = np.zeros(T)
-    for lag in range(T):
-        if lag == 0:
-            C_cont[lag] = 1.0
-            continue
-        run = present[:, : T - lag].copy()
-        for k in range(1, lag + 1):
-            run &= present[:, k: T - lag + k]
-        C_cont[lag] = run.sum() * T / ((T - lag) * total)
+    if T > 0:
+        C_cont[0] = 1.0
+    if T > 1:
+        run = present[:, : T - 1] & present[:, 1:]
+        act = np.arange(present.shape[0])
+        for lag in range(1, T):
+            if run.shape[0] == 0:
+                break
+            if lag > 1:
+                run = run[:, : T - lag] & present[act][:, lag:]
+            C_cont[lag] = run.sum() * T / ((T - lag) * total)
+            if lag + 1 < T:
+                keep = run.any(axis=1)
+                if not keep.all():
+                    run = run[keep]
+                    act = act[keep]
 
     # lifetime: integral and exponential fit
     tau_integral = float(C_inter[1:].sum()) if T > 1 else 0.0

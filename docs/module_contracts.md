@@ -15,7 +15,8 @@
 | `agg` | `-s` `-sel1` `-sel2` `-cutoff`(必填) | `-f` `-mode`(min/center) `-solv` `-frame_range` | 团簇类型计数-帧；标签占比；AiBjCk 表 | 电荷不平衡；边数守恒偏差 |
 | `cluster` | `-s` `-sel1` `-sel2` `-cutoff`(必填) | `-f` `-mode` `-focus` `-frame_range` | 配位数分布-帧；团簇尺寸 | 同 agg |
 | `pistack` | `-s` `-sel` | `-f` `-distance` `-angle` `-frame_range` | 数量-帧；逐对几何 | 未检出芳环；需显式环定义 |
-| `probe` | `-s` | `-f` `-radius`(默认1.445Å=H2) `-mode` `-grid_dr` `-sel` | FFV-帧 / SASA-帧 / PSD 表 / 孔隙率 / 连通分量 | 元素 vdW 缺失；网格过粗；周期连通未闭合 |
+| `freevol` | `-s` | `-f` `-radius`(默认1.445Å=H2) `-mode`(ffv/psd/connectivity) `-grid_dr` `-connectivity` `-components` | FFV-帧 / PSD 表 / 连通性逐帧汇总 | 元素 vdW 缺失；网格过粗；**三斜盒或盒漂移**（报错）|
+| `sasa` | `-s` | `-f` `-radius`(默认1.445Å=H2) `-sasa_points`(默认92) `-sel` | SASA-帧（total + sel 两列）| 元素 vdW 缺失 |
 | `residence` | `-s` `-ref` `-lig` | `-f` `-cutoff` `-mode`(cont/inter) `-frame_range` | 存在函数 ACF；寿命(帧)；区间分布；占据数-帧 | 无配体命中；帧少；统计窗截断偏差 |
 | `transport` | `-s` `-sel` | `-f` `-q` `-frame_range` | D 表；电导表；迁移数 | 缺速度列(ERROR)；缺电荷；帧少 |
 | `occupancy` | `-s` `-sel` `-zone` | `-f` `-frame_range` | 区域占据-帧；穿越计数；首次通过分布 | 区域重叠/越界；无穿越 |
@@ -31,10 +32,10 @@
 
 | 内核 | 被哪些模块使用 |
 |---|---|
-| 近邻/距离 (K1) | rdf, hbond, agg, cluster, pistack, contact, residence, probe, order, msd |
-| 直方图/网格 (K2/K9) | rdf, density, probe, hbond(分布), order |
+| 近邻/距离 (K1) | rdf, hbond, agg, cluster, pistack, contact, residence, sasa, order, msd |
+| 直方图/网格 (K2/K9) | rdf, density, freevol, hbond(分布), order |
 | 时间相关 (K3/K4) | msd, hbond(ACF), residence, transport |
-| 图/连通分量 (K5) | agg, cluster, probe(connectivity), pistack(网络可选) |
+| 图/连通分量 (K5) | agg, cluster, freevol(connectivity), pistack(网络可选) |
 | 拟合/降维 (K6) | rms |
 | 压力/速度 (K8) | transport |
 | 区域/时间轴 (event-zone) | occupancy |

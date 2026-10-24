@@ -20,12 +20,15 @@ CASES = [
     ("contact", ["contact", "-sel1", "type 2", "-sel2", "type 5", "-cutoff", "3"]),
     ("rms", ["rms", "-sel", "type 3"]),
     ("msd", ["msd", "-sel", "type 2"]),
-    ("hbond", ["hbond"]),
+    # no hbond here: sys1_reduced carries only C-H, i.e. no polar-H donor, and
+    # lat (like gmx) refuses such a selection.  hbond's determinism is covered
+    # by the O-H unit tests and the gmx reference harness.
     ("agg", ["agg", "-sel1", "type 2", "-sel2", "type 4 5 6 7", "-cutoff", "2.5"]),
     ("cluster", ["cluster", "-sel1", "type 2", "-sel2", "type 4 5 6 7", "-cutoff", "2.5", "-focus"]),
     ("pistack", ["pistack", "-sel1", "type 3"]),
-    ("probe_ffv", ["probe", "-mode", "ffv", "-grid_dr", "4.0"]),
-    ("probe_sasa", ["probe", "-mode", "sasa", "-sel", "type 2"]),
+    ("freevol_ffv", ["freevol", "-mode", "ffv", "-grid_dr", "4.0"]),
+    ("freevol_connectivity", ["freevol", "-mode", "connectivity", "-grid_dr", "4.0"]),
+    ("sasa", ["sasa", "-sel", "type 2"]),
     ("residence", ["residence", "-ref", "type 2", "-lig", "type 4 5 6 7", "-cutoff", "3"]),
     ("occupancy", ["occupancy", "-sel", "type 2", "-zone", "z:0-45,45-90,90-135"]),
 ]

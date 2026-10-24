@@ -11,17 +11,23 @@ import numpy as np
 
 from ..core.errors import LatError
 from ..core.neighbor import pairs_within
+from ..core.periodic import whole_positions
 from ..core.table import Field, Table
 from ._graph import residues
 from .base import Module, Param
 from . import register
 
 
-def _ring_geometry(pos, atoms_by_ring):
+def _ring_geometry(pos, box, topo, atoms_by_ring):
+    """Ring centres and normals from coordinates made whole along the bond graph.
+
+    A ring straddling a cell face would otherwise get a centre displaced by a
+    full box vector and a normal from a folded point cloud.
+    """
     centers = np.empty((len(atoms_by_ring), 3))
     normals = np.empty((len(atoms_by_ring), 3))
     for k, atoms in enumerate(atoms_by_ring):
-        c = pos[atoms]
+        c = whole_positions(pos, box, topo, indices=atoms)
         centers[k] = c.mean(axis=0)
         centered = c - centers[k]
         if len(c) >= 3:
@@ -75,8 +81,8 @@ class PiStack(Module):
         pair_rows = []
         for fr in ctx.frames(frames):
             pos = fr.positions
-            ca, na = _ring_geometry(pos, rings_a)
-            cb, nb = _ring_geometry(pos, rings_b)
+            ca, na = _ring_geometry(pos, fr.box, topo, rings_a)
+            cb, nb = _ring_geometry(pos, fr.box, topo, rings_b)
             if self_mode:
                 ia, ib, d = pairs_within(ca, None, fr.box, float(distance), same=True)
             else:

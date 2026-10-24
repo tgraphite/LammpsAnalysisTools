@@ -117,3 +117,29 @@ class Topology:
 def reorder_by_id(arrays: dict, ids: np.ndarray):
     order = np.argsort(ids, kind="stable")
     return order, {k: (v[order] if v is not None else None) for k, v in arrays.items()}
+
+
+def vdw_radii(topo: Topology, cfg, element_map: dict | None = None) -> np.ndarray:
+    """Per-atom vdW radius (Å) from the config element table.
+
+    Raises a clear error naming the missing elements/masses instead of silently
+    dropping atoms. Shared by `lat sasa` and `lat freevol`.
+    """
+    table = cfg.get("vdw", default={}) or {}
+    emap = element_map if element_map is not None else topo.type_element
+    radii = np.empty(topo.n_atoms)
+    missing = []
+    for i, t in enumerate(topo.types):
+        el = emap.get(int(t))
+        if el is None or el not in table:
+            missing.append(el or f"type {int(t)}")
+            radii[i] = np.nan
+        else:
+            radii[i] = float(table[el])
+    if missing:
+        raise LatError(
+            f"no vdW radius for {sorted(set(missing))}; provide element identity "
+            f"(Masses section, an `element` dump column, or -types file) or add "
+            f"the element to config vdw"
+        )
+    return radii

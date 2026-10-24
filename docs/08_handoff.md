@@ -5,26 +5,42 @@
 
 ## 0. 一句话状态
 
-规划与决策冻结；P0 **核心已落地**：`core` + `select`/`describe`/`rdf` + `plot1d`/`plot2d` + CLI，
-`pytest tests` 6 passed；`rdf` 两条输入路径（LAMMPS / 内部 GROMACS）逐点相同，且与 MDAnalysis
-InterRDF 交叉验证通过。下一步 = 按第 6 节顺序补完剩余 P0 模块。
+**全部 P0 模块已实现，`pytest tests` 161 passed（全部）。** 2026-10 完成了一轮「LAMMPS→GROMACS 原生对拍」：
+新增 `tests/regression/convert/lammps_to_gmx.py` + `tests/regression/level1_algo/gmx_ref_lammps.py`，
+在 4 链 PET（6200 原子 / 501 帧）上逐帧比 gyrate / rms / rmsf / sasa / rdf / hbond。
+**修掉两个真 bug**：① `lammps_data.parse` 的 `bonds` 没跟着 id 排序重排（Rg 高估 3.6×、
+RMSD 3.5×、RMSF 4.5×）；② `hbond._donors` 把 C–H 当给体（计数高一个量级）。
+修正后 gyrate/RMSD/RMSF 与 gmx 一致到 1e-4 Å 量级、hbond 逐帧基本相同、RDF 配位数差 0.26%。
+**0.2.0 已随后落地**（用户拍板：不留旧版本、接受数值变化并重新生成产物）：新增
+`src/lat/core/periodic.py` 作为周期几何唯一入口（架构守卫 `test_no_ad_hoc_pbc.py`），
+把 `probe` 拆成 `freevol` + `sasa`（`probe` 删除，无兼容壳），修掉 SASA 的 PBC（+14.2% → −0.2%…−0.8%）、
+`contact`/`residence -mode center` 的 wrapped 质心、`pistack` 的裸环心、PSD 的周期 EDT/bin/归一化、
+connectivity 的环面与 26 邻接，并统一到「整体平移后物理量不变」这一判据
+（`tests/regression/level2_format/test_pbc_invariance.py`）。完整清单见 `07_decision_log.md` §7 与
+`12_0.2.0_release.md`；examples 旧产物的重跑映射见 `examples/_lat_v020_recheck/MAPPING.tsv`。
+下一步 = P1 审计 / `current` 与 gmx 对拍 / examples 映射确认后覆盖回原目录。
 
 ## 1. 环境（本机）
 
 - Python：`/opt/miniconda3/bin/python`（MDAnalysis 2.10.0, ase 3.28, numpy 1.26, scipy 1.17,
   matplotlib 3.10, pyyaml 6.0, sklearn 1.8）。
-- GROMACS：`/usr/local/gromacs/bin/gmx`（2023.2，仅内部回归用，不对外暴露）。
+- GROMACS：`/usr/bin/gmx` 2022.5（Debian；另一台曾用 `/usr/local/gromacs/bin/gmx` 2023.2）。
+  回归脚本现在按 `$GMX` → `PATH` → 旧路径解析，不再硬编码。仅内部回归用，不对外暴露。
 - LAMMPS：`/opt/lammps/build/lmp`（2023.2；`stress/atom`、`voronoi/atom`、REAXFF、USER-NEP 等）。
 - 其它：VMD `/opt/vmd193/vmd`、Multiwfn、GPUMD、reacnetgenerator、packmol。
 
 ## 2. 仓库地图（`/opt/lat`）
 
 - `config/lat.yaml` — 唯一配置来源（默认值/单位/vdW/元素质量/各模块默认）。
-- `docs/00–08` — 来龙去脉、元要求、架构、IO、输出契约、回归、参考、决策日志、本文件。
+- `docs/00–10` — 来龙去脉、元要求、架构、IO、输出契约、回归、参考、决策日志、本文件、测试战役。
 - `docs/MANUAL_ALGORITHMS.md` + `docs/module_contracts.md` — 算法原理与模块输入/输出/警报。
-- `src/lat/` — 空包骨架（待实现）。
-- `tests/regression/convert/*.py` — 转换器（已实现，py_compile 通过）。
+- `src/lat/` — 实现（core + 15 个模块 + 2 个绘图命令）。
+- `tests/regression/convert/` — 双向转换器：`convert_gmx_to_lammps.py`（gmx→LAMMPS）与
+  `lammps_to_gmx.py`（LAMMPS→gmx，为原生 gmx 对拍而建）。
+- `tests/regression/level1_algo/` — `compare_gmx.py`（GROMACS 原生输入）与
+  `gmx_ref_lammps.py`（LAMMPS 输入；含 gyrate/rms/rmsf/sasa/rdf/hbond）。
 - `tests/regression/samples/sys1_reduced/` — 自包含回归样例（已落盘，自检全通过）。
+  注意：它是 Li/FSI/FEC 电解液，只有 C–H，**没有电负性给体**，因此 hbond 在样本级必然报错。
 
 ## 3. 冻结决策（要点，完整见 07）
 
@@ -73,10 +89,10 @@ InterRDF 交叉验证通过。下一步 = 按第 6 节顺序补完剩余 P0 模�
 4. ✅ `hbond`（D···A 3.5 Å / >150°，ACF+寿命+3 投影分布，需 Bonds）→ ✅ `agg`（残基二部图、
    SSIP/CIP/AGG + 可选 `-solv` speciation）→ ✅ `cluster`（CN/尺寸分布，`-focus` 退化 CN）→
    ✅ `pistack`（移植 83_pipi_stack：SVD 环法向 + 中心距离 + 夹角）。
-5. ✅ `gyrate` `contact` `probe`（ffv/psd/porosity/connectivity/sasa）`residence`（inter/cont ACF、
+5. ✅ `gyrate` `contact` `freevol`（ffv/psd/connectivity）`sasa` `residence`（inter/cont ACF、
    区间分布）`transport`（每物种 D + NE + GK，强制速度列）`occupancy`（zone 语法、穿越、首次通过、富集）。
 
-**全部 P0 模块已实现；`pytest tests` 55 passed。** 含：
+**全部 P0 模块已实现；0.2.0 时 `pytest tests` 161 passed。** 含：
 - 真实样例模块 E2E 冒烟（17 模块 + transport 守卫）；
 - **level1 gmx 逐值回归**（`compare_gmx.py`，sys1–6 含 PMBA：RDF/CN ≤0.2%、密度 <1%、MSD ~5%）；
 - 幂等测试 16 项；PBC 边界崩溃 / hbond 空帧 / transport 单位 / ACF 无偏等缺陷已修。

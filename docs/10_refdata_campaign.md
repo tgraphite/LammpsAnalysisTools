@@ -54,13 +54,13 @@
 ## 5. LAMMPS 侧
 
 `tests/compat/compat_run.py` 覆盖 8 个有效 (data,lammpstrj) 对：**0 失败**。此前
-`probe` 网格过大错误已由自动粗化修复。其余非通过项均为 SKIP（无速度列 → transport；
-无 Bonds → hbond/agg/cluster/residence；帧数不足 → rms/msd）。
+`probe`（0.2.0 起为 `freevol`）网格过大错误已由自动粗化修复。其余非通过项均为 SKIP
+（无速度列 → transport；无 Bonds → hbond/agg/cluster/residence；帧数不足 → rms/msd）。
 
 ## 6. 已知限制（未解决，记录在案）
 
-- `hbond` 的 `_acf` 连续概率部分为 O(T²)、`present` 矩阵为 (键数 × T)；**超长轨迹（数千帧）
-  的 lifetime 计算仍会很大**。建议按窗口/子采样运行。
-- 粗粒化体系（无元素、无化学键）不支持 `probe`/`hbond`（报错清晰）。
+- `hbond` 的 `_acf`：0.2.0 已改为增量式并丢弃已结束的氢键对（120k 对 × 601 帧从分钟级到
+  0.04 s），`present` 矩阵仍为 (键数 × T)，超长轨迹建议按窗口/子采样运行。
+- 粗粒化体系（无元素、无化学键）不支持 `freevol`/`sasa`/`hbond`（报错清晰）。
 - 反应轨迹逐帧原子数变化 → lat 报错并建议限定窗口（与 09 一致）。
 - gmx 版本低于 tpr 版本时无法取得 gmx GT；lat 仍可分析。

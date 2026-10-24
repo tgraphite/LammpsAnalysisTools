@@ -29,7 +29,7 @@
 | defect / sdf / spectra | **不开发**（交给 OVITO / 专用谱工具） |
 | ππ 堆积 | 直接**移植**已有 100% 验证的代码（`/mnt/d/dev/83_pipi_stack_code`、`gmx_pistack`） |
 | 氢键回归 | 只要求**数值一致**：自造计算对象，能算出点数即可（回归不考虑物理） |
-| probe | `freevolume` + `pore` + `sasa` 集成为单一 `lat probe`（见 MANUAL_ALGORITHMS.md） |
+| freevol / sasa | 0.1.0 里 `freevolume` + `pore` + `sasa` 集成在单一 `lat probe`；0.2.0 按算法族拆回 `lat freevol`（体素网格）与 `lat sasa`（曲面），见 MANUAL_ALGORITHMS.md §12 |
 | zone/event | 更名为 `lat occupancy`（区域占据与穿越；见 MANUAL_ALGORITHMS.md） |
 | transport | 显式要求 `lammpstrj` 含速度列（`vx vy vz`），否则 FATAL |
 

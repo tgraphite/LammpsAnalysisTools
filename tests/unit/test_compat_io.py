@@ -154,7 +154,7 @@ def test_vdw_table_covers_metals_and_metalloids():
     assert len(vdw) > 90
 
 
-def test_probe_grid_auto_coarsens_large_box(tmp_path):
+def test_freevol_grid_auto_coarsens_large_box(tmp_path):
     from lat.config import load as load_config
     from lat.core.context import Context
     from lat.core.io import open_system
@@ -192,31 +192,11 @@ ITEM: ATOMS id type x y z
     cfg = load_config()
     topo_o, src = open_system(str(topo), str(traj), cfg=cfg)
     ctx = Context(topo_o, src, cfg=cfg)
-    # default grid_dr = 0.5 A over a 2000 A box would be ~6.4e10 points; must coarsen
-    tables = get("probe")().run(ctx, radius=1.445, mode="ffv", grid_dr=0.5,
-                               connectivity=6, sel=None, sasa_points=92,
-                               frame_range="0:1:1", stride=None)
+    # grid_dr = 0.5 A over a 2000 A box would be 6.4e10 voxels; must coarsen
+    tables = get("freevol")().run(ctx, radius=1.445, mode="ffv", grid_dr=0.5,
+                                  connectivity=26, psd_rmax=None, components=False,
+                                  frame_range="0:1:1", stride=None)
     assert tables and tables[0].data.shape[0] == 1
-
-
-def test_probe_occupancy_matches_bruteforce():
-    from lat.modules.probe import _occupancy, _grid_axes
-    rng = np.random.default_rng(0)
-    box = Box.orthorhombic([10.0, 10.0, 10.0])
-    pos = rng.uniform(0, 10, size=(20, 3))
-    radii = rng.uniform(1.0, 2.0, size=20)
-    dr = 1.0
-    axes = _grid_axes(box, dr)
-    occ = _occupancy(pos, box, axes, radii, dr)
-
-    # brute force over every voxel centre
-    dims = [len(a) for a in axes]
-    ref = np.zeros(dims, bool)
-    for i in range(dims[0]):
-        for j in range(dims[1]):
-            for k in range(dims[2]):
-                c = np.array([axes[0][i], axes[1][j], axes[2][k]])
-                d = c[None, :] - pos
-                d -= box.lengths[None, :] * np.round(d / box.lengths[None, :])
-                ref[i, j, k] = bool(((d ** 2).sum(axis=1) <= radii ** 2).any())
-    assert np.array_equal(occ, ref)
+    assert any("coarsened" in w for w in tables[0].warnings)
+    # one atom smaller than a coarsened voxel: the grid cannot see it
+    assert 0.99 <= tables[0].data[0, 1] <= 1.0

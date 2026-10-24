@@ -18,7 +18,7 @@
 cd lat
 bash install.sh
 export PATH="$HOME/.local/bin:$PATH"   # 若安装脚本提示不在 PATH
-lat --version                          # 应输出 lat 0.1.0
+lat --version                          # 应输出 lat 0.2.0
 ```
 
 若机器自带 Python < 3.9（如 CentOS 7/8 的 3.6），`install.sh` 会自动用 `uv`
@@ -101,7 +101,7 @@ lat describe -module rdf        # 模块输入/输出/参数；具体默认值�
 | GROMACS | `resname`, `name`, `resid`, `type`, `element`, `mol` | `-sel1 "resname LI" -sel2 "resname FSI"` |
 
 > 注意：`resname` **只适用于 GROMACS**；LAMMPS 拓扑没有残基名。
-> `all` 表示全部原子。**单选择模块**（gyrate/rms/msd/residence 的 `-lig`、probe 的 `-sel` 等）
+> `all` 表示全部原子。**单选择模块**（gyrate/rms/msd/residence 的 `-lig`、sasa 的 `-sel` 等）
 > 用 `-sel`；**双选择模块**（rdf/contact/hbond/agg/cluster）用 `-sel1`/`-sel2`，此时用 `-sel` 会
 > 因参数歧义报错（`-sel` 可匹配 `-sel1/-sel2`）。
 
@@ -199,12 +199,24 @@ lat occupancy BASE -sel "type 2" -zone "z:0-10,10-20 x:0-5" -o out
 ```
 区域语法 `轴:min-max[,min-max]`，半开区间 `[min,max)`。输出占据数、穿越计数、首次通过、富集。
 
-### 5.12 probe — 自由体积 / 孔隙 / SASA
+### 5.12 freevol — 自由体积 / 孔径 / 连通性（体素网格）
 ```bash
-lat probe BASE -mode ffv|psd|porosity|connectivity|sasa|all [-radius 1.445] [-grid_dr 0.5] -o out
+lat freevol BASE -mode ffv|psd|connectivity [-radius 1.445] [-grid_dr 0.5] [-connectivity 26] -o out
 ```
-输出 `out.probe.ffv.out.csv`、`out.probe.psd.out.csv`、`out.probe.connectivity.out.csv`、
-`out.probe.sasa.out.csv`。`sasa` 可用 `-sel` 限定子集。需要能推断元素（否则报错并提示用 `-types`）。
+输出 `out.freevol.out.csv`（ffv 主表）、`out.freevol.psd.out.csv`（PSD，`∫dV/dr dr = 1`）、
+`out.freevol.connectivity.out.csv`（逐帧汇总；加 `-components` 再写逐分量表）。
+**不接受 `-sel`**：网格占据必须考虑全部原子（0.1.0 收下 `-sel` 却静默忽略）。
+网格要求**正交且固定**的盒子：三斜、或所选帧内盒长漂移 >2% 会直接报错；漂移 0.1%–2% 给 WARN。
+需要能推断元素（否则报错并提示用 `-types`）。
+
+### 5.12b sasa — 溶剂可及表面积
+```bash
+lat sasa BASE [-sel "type 2"] [-radius 1.445] [-sasa_points 92] -o out
+```
+输出 `out.sasa.out.csv`，两列：`sasa_total`（整个体系的表面积）与 `sasa_sel`（选区内原子的贡献）。
+表面**始终用全部原子**构建，`-sel` 只决定单独报告哪一部分——即"该基团在真实环境中的暴露面积"。
+
+> 0.1.0 的 `lat probe` 已删除（拆成 `freevol` + `sasa`），传入 `probe` 会报 unknown module。
 
 ### 5.13 pistack — π–π 堆积
 ```bash
@@ -274,7 +286,7 @@ lat plot1d -f out.agg.labels.out.csv -stack -o spec_stack.png   # 归一化堆�
 | `[lat ERROR] selection '...' matched 0 atoms` | 选择写错，或用了 LAMMPS 不支持的 `resname`；先用 `lat select` 验证 |
 | `unknown atom_style` | 用 `-style` 指定；加速器后缀已自动处理 |
 | `no per-type masses available` | 拓扑无 `Masses`；密度改用 `-quantity number` |
-| `probe: no vdW radius for [...]` | 元素无法推断；补 `Masses`、dump `element` 列或 `-types` |
+| `no vdW radius for [...]`（freevol/sasa）| 元素无法推断；补 `Masses`、dump `element` 列或 `-types` |
 | `transport: trajectory must contain velocity columns` | 轨迹无 `vx/vy/vz`（如 xtc）；用带速度的 dump/trr |
 | `dump has N atoms, topology has M` | 拓扑与轨迹不是同一体系，或反应轨迹原子数变化；换正确拓扑或限定窗口 |
 | `XDR read error` | 轨迹文件截断/损坏 |

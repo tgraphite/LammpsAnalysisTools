@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import warnings
@@ -33,8 +34,11 @@ from lat.core.context import Context  # noqa: E402
 from lat.core.io import open_system  # noqa: E402
 from lat.modules import get  # noqa: E402
 
-GMX = "/usr/local/gromacs/bin/gmx"
-ENV = {"GMX_MAXBACKUP": "-1", "PATH": "/usr/local/gromacs/bin:/usr/bin:/bin",
+# gmx is resolved from $GMX or $PATH; the 2023.2 tree this repo was
+# written on lives at /usr/local/gromacs/bin/gmx, but Debian ships
+# /usr/bin/gmx (2022.5) and both are accepted.
+GMX = os.environ.get("GMX") or shutil.which("gmx") or "/usr/local/gromacs/bin/gmx"
+ENV = {"GMX_MAXBACKUP": "-1", "PATH": os.path.dirname(GMX) + ":/usr/bin:/bin",
        "OMP_NUM_THREADS": "4"}
 
 

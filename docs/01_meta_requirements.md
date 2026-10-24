@@ -26,7 +26,7 @@
 ## 范围（Scope）
 
 **做**：`rdf`、`density`、`hbond`、`rms`(RMSD/RMSF)、`msd`、`agg`、`cluster`、`pistack`、
-`probe`、`residence`、`transport`、`occupancy`、`gyrate`、`contact`、`order`、`select`、`plot1d/2d`、`describe`。
+`freevol`、`sasa`、`residence`、`transport`、`occupancy`、`gyrate`、`contact`、`order`、`select`、`plot1d/2d`、`describe`。
 
 **不做**：能量/自由能、PMF、MMPBSA、对接、反应网络、固体/金属力学、DXA/位错、SDF、谱/VDOS/SAXS、
 phonon、相场、DPD/CG、AIMD/QM、PKA。

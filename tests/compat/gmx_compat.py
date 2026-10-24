@@ -79,7 +79,7 @@ def battery(tpr, traj, timeout):
                      "-cutoff", "5", "-o", o]),
         ("occupancy", ["occupancy", *base, *fr, "-sel", f"resname {r1}",
                        "-zone", "z:0-10", "-o", o]),
-        ("probe_ffv", ["probe", *base, *fr, "-mode", "ffv", "-o", o]),
+        ("freevol_ffv", ["freevol", *base, *fr, "-mode", "ffv", "-o", o]),
         ("transport", (["transport", *base, *fr, "-sel", f"resname {r1}", "-o", o]
                        if has_vel else None)),
     ]
@@ -143,7 +143,7 @@ def main():
         Path(a.json).write_text(json.dumps(results, indent=1))  # survive a kill
     Path(a.json).write_text(json.dumps(results, indent=1))
     mods = ["describe", "select", "rdf", "density1d", "gyrate", "rms", "msd", "contact",
-            "occupancy", "probe_ffv", "transport", "hbond", "agg", "cluster", "residence"]
+            "occupancy", "freevol_ffv", "transport", "hbond", "agg", "cluster", "residence"]
     lines = ["# GROMACS compatibility battery (lat only)", "",
              "| system | " + " | ".join(mods) + " |", "|" + "---|" * (len(mods) + 1)]
     fails = []

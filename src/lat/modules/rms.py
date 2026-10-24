@@ -6,6 +6,7 @@ import numpy as np
 
 from ..core.errors import LatError
 from ..core.table import Field, Table
+from ..core.periodic import bond_graph_consistent
 from ..core.unwrap import build_adjacency, make_whole, molecule_groups
 from .base import Module, Param
 from . import register
@@ -63,7 +64,16 @@ class RMS(Module):
                 groups = molecule_groups(mols)
 
         def _whole(fr):
+            if bond_graph_consistent(fr.positions, fr.box, topo, fi) is False:
+                _whole.warn = (
+                    "the bond graph of the fitted selection wraps the periodic cell "
+                    "(a ring encircles the box), so whole-molecule reconstruction is "
+                    "inconsistent and this RMSD/RMSF is approximate; gmx refuses this "
+                    "case ('inconsistent shifts over periodic boundaries')"
+                )
             return make_whole(fr.positions, fr.box, adj=adj, groups=groups)
+
+        _whole.warn = None
 
         # reference
         if ref in (None, "first", "0"):
@@ -108,6 +118,8 @@ class RMS(Module):
             if rmsf:
                 aligned.append(moved)
 
+        if _whole.warn and _whole.warn not in warnings:
+            warnings.append(_whole.warn)
         rmsd_data = np.array(rmsd_rows, float)
         tables = [Table(
             title="RMSD",

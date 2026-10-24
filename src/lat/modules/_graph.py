@@ -12,6 +12,7 @@ import numpy as np
 
 from ..core.errors import LatError
 from ..core.neighbor import pairs_within
+from ..core.periodic import residue_coms
 
 
 def residues(topo, indices):
@@ -43,30 +44,32 @@ def edges_min(pos, mols_a, atoms_a, mols_b, atoms_b, box, cutoff):
     return set(zip(a_res[ia].tolist(), b_res[ib].tolist()))
 
 
-def _coms(pos, atoms_by_mol, box):
-    """Per-residue COM, unwrapped within the residue (PBC-safe)."""
-    out = np.empty((len(atoms_by_mol), 3))
-    for k, a in enumerate(atoms_by_mol):
-        ref = pos[a[0]]
-        d = box.minimum_image(pos[a] - ref)
-        out[k] = ref + d.mean(axis=0)
-    return out
+def _coms(pos, atoms_by_mol, box, topo=None):
+    """Per-residue centre, reconstructed along the bond graph (PBC-safe).
+
+    The old implementation used `ref + MIC(pos - ref)`, which folds a chain
+    longer than half a box onto itself; `residue_coms` walks the bond graph
+    instead. `topo` is optional only so legacy callers keep working -- without
+    it every residue is treated as an unconnected set.
+    """
+    coms, _ = residue_coms(pos, box, topo, atoms_by_mol, what="residue")
+    return coms
 
 
-def edges_center(pos, atoms_a, atoms_b, box, cutoff):
+def edges_center(pos, atoms_a, atoms_b, box, cutoff, topo=None):
     if not atoms_a or not atoms_b:
         return set()
-    com_a = _coms(pos, atoms_a, box)
-    com_b = _coms(pos, atoms_b, box)
+    com_a = _coms(pos, atoms_a, box, topo)
+    com_b = _coms(pos, atoms_b, box, topo)
     ia, ib, _ = pairs_within(com_a, com_b, box, cutoff, same=False)
     return set(zip(ia.tolist(), ib.tolist()))
 
 
-def edges(pos, atoms_a, atoms_b, box, cutoff, mode):
+def edges(pos, atoms_a, atoms_b, box, cutoff, mode, topo=None):
     if mode == "min":
         return edges_min(pos, None, atoms_a, None, atoms_b, box, cutoff)
     if mode == "center":
-        return edges_center(pos, atoms_a, atoms_b, box, cutoff)
+        return edges_center(pos, atoms_a, atoms_b, box, cutoff, topo)
     raise LatError(f"-mode must be min|center, got {mode!r}")
 
 

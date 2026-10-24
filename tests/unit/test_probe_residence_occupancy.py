@@ -1,4 +1,4 @@
-"""Smoke/unit tests for probe, residence, occupancy and transport."""
+"""Smoke/unit tests for freevol, residence, occupancy and transport."""
 
 import subprocess
 import sys
@@ -34,16 +34,16 @@ def write_dump_full(path, frames, cols="x y z"):
     path.write_text("\n".join(out) + "\n")
 
 
-def test_probe_ffv(tmp_path, repo_root):
+def test_freevol_ffv(tmp_path, repo_root):
     atoms = [(1, 1, 0.0, 5.0, 5.0, 5.0)]
     data = tmp_path / "p.data"
     dump = tmp_path / "p.lammpstrj"
     write_full_data(data, atoms)
     write_dump_full(dump, [(atoms, (10, 10, 10))] * 2)
-    proc = run_lat(repo_root, ["probe", "-s", str(data), "-f", str(dump), "-mode", "ffv",
+    proc = run_lat(repo_root, ["freevol", "-s", str(data), "-f", str(dump), "-mode", "ffv",
                                "-grid_dr", "0.5", "-radius", "0.3", "-o", str(tmp_path / "out")])
     assert proc.returncode == 0, proc.stderr
-    header = open(tmp_path / "out.probe.ffv.out.csv").read()
+    header = open(tmp_path / "out.freevol.out.csv").read()
     import re
     m = re.search(r"ffv_mean=([\d.eE+-]+)", header)
     expected_occ = (4 / 3) * np.pi * (1.70 + 0.3) ** 3 / 1000

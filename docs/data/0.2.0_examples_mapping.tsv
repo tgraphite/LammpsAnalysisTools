@@ -1,0 +1,109 @@
+workdir	status	old_file	new_file	module	reason	rows_old	rows_new	max_rel_diff	changed_cols	note
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.gyrate.out.csv	31_linear_polymer/analysis/run.gyrate.out.csv	gyrate	bond-id order fix (gyrate read Rg of the wrong atoms)	501	501	7.553e-01	rg	mirror-only
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.rmsd.out.csv	31_linear_polymer/analysis/run.rmsd.out.csv	rms	bond-id order fix (rmsd/rmsf read the wrong atoms)	501	501	9.042e-01	rmsd	mirror-only
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.rmsf.out.csv	31_linear_polymer/analysis/run.rmsf.out.csv	rms	bond-id order fix (rmsd/rmsf read the wrong atoms)	6200	6200	9.563e-01	rmsf	mirror-only
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.probe.ffv.out.csv	31_linear_polymer/analysis/run.freevol.out.csv	freevol	probe -> freevol; PBC-correct occupancy unchanged, new tag	501	501	0.000e+00		mirror-only
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.probe.psd.out.csv	31_linear_polymer/analysis/run.freevol.psd.out.csv	freevol	probe -> freevol; PSD redefined (vdW surface + Voronoi norm)	40	69	n/a		shape changed (40, 2) -> (69, 2)
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.probe.connectivity.out.csv	31_linear_polymer/analysis/run.freevol.connectivity.out.csv	freevol	probe -> freevol; torus-closed connectivity, 26-connectivity	30812	501	n/a		column names changed: frame+component+volume+percolating -> frame+n_components+n_percolating+v_largest+frac_largest+v_percolating; shape changed (30812, 4) -> (501, 6)
+31_linear_polymer/analysis	affected	31_linear_polymer/analysis/run.probe.sasa.out.csv	31_linear_polymer/analysis/run.sasa.out.csv	sasa	probe -> sasa; SASA is now minimum-image (was +14%)	501	501	1.433e-01	sasa	column names changed: frame+sasa -> frame+sasa_total+sasa_sel; shape changed (501, 2) -> (501, 3); compared the common columns
+22_surfactant/8x_system	affected	22_surfactant/8x_system/hbond_any.hbond.out.csv	22_surfactant/8x_system/hbond_any.hbond.out.csv	hbond	hbond donor fix (only N/O/F/S/Cl/Br/I bonded to H donate)	40	40	2.280e+00	n_hbond	mirror-only
+22_surfactant/8x_system	affected	22_surfactant/8x_system/hbond_any.hbond.acf.out.csv	22_surfactant/8x_system/hbond_any.hbond.acf.out.csv	hbond	hbond donor fix (only N/O/F/S/Cl/Br/I bonded to H donate)	11	40	n/a		shape changed (11, 3) -> (40, 3)
+22_surfactant/8x_system	affected	22_surfactant/8x_system/hbond_any.hbond.dist_xy.out.csv	22_surfactant/8x_system/hbond_any.hbond.dist_xy.out.csv	hbond	hbond donor fix (only N/O/F/S/Cl/Br/I bonded to H donate)	2500	2500	4.758e+00	count	mirror-only
+22_surfactant/8x_system	affected	22_surfactant/8x_system/hbond_any.hbond.dist_xz.out.csv	22_surfactant/8x_system/hbond_any.hbond.dist_xz.out.csv	hbond	hbond donor fix (only N/O/F/S/Cl/Br/I bonded to H donate)	2500	2500	5.000e+00	count	mirror-only
+22_surfactant/8x_system	affected	22_surfactant/8x_system/hbond_any.hbond.dist_yz.out.csv	22_surfactant/8x_system/hbond_any.hbond.dist_yz.out.csv	hbond	hbond donor fix (only N/O/F/S/Cl/Br/I bonded to H donate)	2500	2500	5.167e+00	count	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/any.hbond.out.csv	24_electrolyte_electrode/sandwich_licl/any.hbond.out.csv	hbond	hbond donor fix	601	601	2.015e+00	n_hbond	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/any.hbond.acf.out.csv	24_electrolyte_electrode/sandwich_licl/any.hbond.acf.out.csv	hbond	hbond donor fix	601	601	9.336e-01	C_inter,C_cont	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/any.hbond.dist_xy.out.csv	24_electrolyte_electrode/sandwich_licl/any.hbond.dist_xy.out.csv	hbond	hbond donor fix	2500	2500	3.204e+00	count	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/any.hbond.dist_xz.out.csv	24_electrolyte_electrode/sandwich_licl/any.hbond.dist_xz.out.csv	hbond	hbond donor fix	2500	2500	9.485e+00	count	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/any.hbond.dist_yz.out.csv	24_electrolyte_electrode/sandwich_licl/any.hbond.dist_yz.out.csv	hbond	hbond donor fix	2500	2500	2.700e+01	count	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/li_go.contact.out.csv	24_electrolyte_electrode/sandwich_licl/li_go.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	7.911e-04	com_dist	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/li_gr.contact.out.csv	24_electrolyte_electrode/sandwich_licl/li_gr.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/cl_go.contact.out.csv	24_electrolyte_electrode/sandwich_licl/cl_go.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	9.999e-04	com_dist	mirror-only
+24_electrolyte_electrode/sandwich_licl	affected	24_electrolyte_electrode/sandwich_licl/cl_gr.contact.out.csv	24_electrolyte_electrode/sandwich_licl/cl_gr.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	affected	24_electrolyte_electrode/sandwich_licl_cpm/li_go.contact.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/li_go.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	7.833e-04	com_dist	mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	affected	24_electrolyte_electrode/sandwich_licl_cpm/li_gr.contact.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/li_gr.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	affected	24_electrolyte_electrode/sandwich_licl_cpm/cl_go.contact.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/cl_go.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	7.647e-04	com_dist	mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	affected	24_electrolyte_electrode/sandwich_licl_cpm/cl_gr.contact.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/cl_gr.contact.out.csv	contact	contact -mode min: com_dist now uses whole-molecule centres	601	601	0.000e+00		mirror-only
+21_ethanol_water	verify	21_ethanol_water/owow.rdf.out.csv	21_ethanol_water/owow.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Water (O) - Water (O) -> r+g_O_O
+21_ethanol_water	verify	21_ethanol_water/owow.rdf.cn.out.csv	21_ethanol_water/owow.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+21_ethanol_water	verify	21_ethanol_water/oeow.rdf.out.csv	21_ethanol_water/oeow.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Water (O) - Ethanol (O) -> r+g_O_O
+21_ethanol_water	verify	21_ethanol_water/oeow.rdf.cn.out.csv	21_ethanol_water/oeow.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/1x_system	verify	22_surfactant/1x_system/oil_water.rdf.out.csv	22_surfactant/1x_system/oil_water.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Oil - Water -> r+g_type_7_8_type_9_10
+22_surfactant/1x_system	verify	22_surfactant/1x_system/oil_water.rdf.cn.out.csv	22_surfactant/1x_system/oil_water.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi.agg.out.csv	23_electrolyte/li_fsi.agg.out.csv	agg	agg -mode min untouched (config default is min)	20	20	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi.agg.labels.out.csv	23_electrolyte/li_fsi.agg.labels.out.csv	agg	agg -mode min untouched (config default is min)	20	20	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi.agg.speciation.out.csv	23_electrolyte/li_fsi.agg.speciation.out.csv	agg	agg -mode min untouched (config default is min)	3320	3320	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_solv.cluster.cn.out.csv	23_electrolyte/li_solv.cluster.cn.out.csv	cluster	cluster -mode min untouched	7	7	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_solv.cluster.size.out.csv	23_electrolyte/li_solv.cluster.size.out.csv	cluster	cluster -mode min untouched	9	10	n/a		shape changed (9, 3) -> (10, 3)
+23_electrolyte	verify	23_electrolyte/li_solv.rdf.out.csv	23_electrolyte/li_solv.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Li - Solv -> r+g_Li_type_6-18
+23_electrolyte	verify	23_electrolyte/li_solv.rdf.cn.out.csv	23_electrolyte/li_solv.rdf.cn.out.csv	rdf	rdf untouched	100	200	n/a		column names changed: r+Li-Solv -> r+cn_Li_type_6-18; shape changed (100, 2) -> (200, 2)
+24_electrolyte_electrode/sandwich_licl	verify	24_electrolyte_electrode/sandwich_licl/li_end.density.out.csv	24_electrolyte_electrode/sandwich_licl/li_end.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl	verify	24_electrolyte_electrode/sandwich_licl/li.msd.out.csv	24_electrolyte_electrode/sandwich_licl/li.msd.out.csv	msd	msd untouched	601	601	0.000e+00		mirror-only
+32_molecular_crystal/run_constraincof	verify	32_molecular_crystal/li.density.2d.out.csv	32_molecular_crystal/li.density.2d.out.csv	density	density untouched	40000	40000	0.000e+00		mirror-only
+21_ethanol_water	verify	21_ethanol_water/ew.rdf.out.csv	21_ethanol_water/ew.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Ethanol - Water -> r+g_type_1_2_3_4_5_type_6_7
+21_ethanol_water	verify	21_ethanol_water/ew.rdf.cn.out.csv	21_ethanol_water/ew.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/1x_system	verify	22_surfactant/1x_system/surf_so_water_o.rdf.out.csv	22_surfactant/1x_system/surf_so_water_o.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+surfactant (SO) - Water (O) -> r+g_type_5_6_S
+22_surfactant/1x_system	verify	22_surfactant/1x_system/surf_so_water_o.rdf.cn.out.csv	22_surfactant/1x_system/surf_so_water_o.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/1x_system	verify	22_surfactant/1x_system/surf_org_oil.rdf.out.csv	22_surfactant/1x_system/surf_org_oil.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+surfactant (CH) - Oil -> r+g_type_2_3_4_type_7_8
+22_surfactant/1x_system	verify	22_surfactant/1x_system/surf_org_oil.rdf.cn.out.csv	22_surfactant/1x_system/surf_org_oil.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/8x_system	verify	22_surfactant/8x_system/oil_water.rdf.out.csv	22_surfactant/8x_system/oil_water.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Oil - Water -> r+g_type_7_8_type_9_10
+22_surfactant/8x_system	verify	22_surfactant/8x_system/oil_water.rdf.cn.out.csv	22_surfactant/8x_system/oil_water.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/8x_system	verify	22_surfactant/8x_system/surf_so_water_o.rdf.out.csv	22_surfactant/8x_system/surf_so_water_o.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+surfactant (SO) - Water (O) -> r+g_type_5_6_S
+22_surfactant/8x_system	verify	22_surfactant/8x_system/surf_so_water_o.rdf.cn.out.csv	22_surfactant/8x_system/surf_so_water_o.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/8x_system	verify	22_surfactant/8x_system/surf_org_oil.rdf.out.csv	22_surfactant/8x_system/surf_org_oil.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+surfactant (CH) - Oil -> r+g_type_2_3_4_type_7_8
+22_surfactant/8x_system	verify	22_surfactant/8x_system/surf_org_oil.rdf.cn.out.csv	22_surfactant/8x_system/surf_org_oil.rdf.cn.out.csv	rdf	rdf untouched	200	200	0.000e+00		mirror-only
+22_surfactant/8x_system	verify	22_surfactant/8x_system/oil.density.2d.out.csv	22_surfactant/8x_system/oil.density.2d.out.csv	density	stored value is 1/L too low (70x); density itself is untouched	40000	40000	1.167e+14	x,y,density	column names changed: x+y+density -> x+y+rho
+22_surfactant/8x_system	verify	22_surfactant/8x_system/surfactant_density_2d.density.2d.out.csv	22_surfactant/8x_system/surfactant_density_2d.density.2d.out.csv	density	stored value is 1/L too low (70x); density itself is untouched	40000	40000	3.132e+14	x,y,rho	mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi.rdf.out.csv	23_electrolyte/li_fsi.rdf.out.csv	rdf	rdf untouched	200	200	0.000e+00		column names changed: r+Li-FSI -> r+g_Li_type_2-5
+23_electrolyte	verify	23_electrolyte/li_fsi.rdf.cn.out.csv	23_electrolyte/li_fsi.rdf.cn.out.csv	rdf	rdf untouched	99	200	n/a		column names changed: r+Li-FSI -> r+cn_Li_type_2-5; shape changed (99, 2) -> (200, 2)
+23_electrolyte	verify	23_electrolyte/li_fsi_lowercutoff.agg.out.csv	23_electrolyte/li_fsi_lowercutoff.agg.out.csv	agg	agg -mode min untouched	100	100	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi_lowercutoff.agg.labels.out.csv	23_electrolyte/li_fsi_lowercutoff.agg.labels.out.csv	agg	agg -mode min untouched	100	100	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi.cluster.cn.out.csv	23_electrolyte/li_fsi.cluster.cn.out.csv	cluster	cluster untouched (reports size-1 components)	5	5	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/li_fsi.cluster.size.out.csv	23_electrolyte/li_fsi.cluster.size.out.csv	cluster	cluster untouched (reports size-1 components)	21	21	0.000e+00		mirror-only
+23_electrolyte	verify	23_electrolyte/Li.msd.out.csv	23_electrolyte/Li.msd.out.csv	msd	msd untouched	201	201	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl	verify	24_electrolyte_electrode/sandwich_licl/cl_end.density.out.csv	24_electrolyte_electrode/sandwich_licl/cl_end.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	verify	24_electrolyte_electrode/sandwich_licl_cpm/li_end.density.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/li_end.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	verify	24_electrolyte_electrode/sandwich_licl_cpm/cl_end.density.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/cl_end.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_licl_cpm	verify	24_electrolyte_electrode/sandwich_licl_cpm/li.msd.out.csv	24_electrolyte_electrode/sandwich_licl_cpm/li.msd.out.csv	msd	msd untouched	601	601	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_lifsi	verify	24_electrolyte_electrode/sandwich_lifsi/tmp_end.density.out.csv	24_electrolyte_electrode/sandwich_lifsi/tmp_end.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/sandwich_lifsi	verify	24_electrolyte_electrode/sandwich_lifsi/tmp_start.density.out.csv	24_electrolyte_electrode/sandwich_lifsi/tmp_start.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/vaccum_lifsi	verify	24_electrolyte_electrode/vaccum_lifsi/prerun_final.density.out.csv	24_electrolyte_electrode/vaccum_lifsi/prerun_final.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/vaccum_lifsi	verify	24_electrolyte_electrode/vaccum_lifsi/prerun_init.density.out.csv	24_electrolyte_electrode/vaccum_lifsi/prerun_init.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/vaccum_lifsi	verify	24_electrolyte_electrode/vaccum_lifsi/run_final.density.out.csv	24_electrolyte_electrode/vaccum_lifsi/run_final.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+24_electrolyte_electrode/vaccum_lifsi	verify	24_electrolyte_electrode/vaccum_lifsi/run_init.density.out.csv	24_electrolyte_electrode/vaccum_lifsi/run_init.density.out.csv	density	density untouched	200	200	0.000e+00		mirror-only
+32_molecular_crystal/run_constraincof	verify	32_molecular_crystal/cl.density.2d.out.csv	32_molecular_crystal/cl.density.2d.out.csv	density	density untouched	40000	40000	0.000e+00		mirror-only
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latfix.gyrate.out.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latfix.rmsd.out.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latfix.rmsf.out.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.ffv.out.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.psd.out.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.sasa.out.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.ffv.out.png			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.psd.out.png			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.sasa.out.png			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.fix.gyrate.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.fix.maxedgejump.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.fix.mol_rg.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.fix.rmsd.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.fix.rmsf.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.gmx.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.lat.gyrate.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.lat.maxedgejump.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.lat.mol_rg.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.lat.rmsd.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck.lat.rmsf.csv			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck_bond_order.patch			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck_gmx_compare.py			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck_jumps.py			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck_probe.py			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/latcheck_verify.py			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/gmx_convert3.py			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/bonds_fixed.tmp.npy			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.ffv.out.png			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.psd.out.png			round-1 exploration artifact: delete					delete
+31_linear_polymer/analysis	scaffolding	31_linear_polymer/analysis/run.sasa.out.png			round-1 exploration artifact: delete					delete
+22_surfactant/8x_system	invalid	22_surfactant/8x_system/hbond_surfactant_water.hbond.out.csv			no polar-H donor in sel1 (surfactant is C/H/O/S only, 1920 C-H): 0.1.0 counted C-H...O artifacts; lat 0.2.0 refuses and gmx prints 'No Donors found'					delete
+22_surfactant/8x_system	invalid	22_surfactant/8x_system/hbond_surfactant_water.hbond.acf.out.csv			no polar-H donor in sel1 (surfactant is C/H/O/S only, 1920 C-H): 0.1.0 counted C-H...O artifacts; lat 0.2.0 refuses and gmx prints 'No Donors found'					delete
+22_surfactant/8x_system	invalid	22_surfactant/8x_system/hbond_surfactant_water.hbond.dist_xy.out.csv			no polar-H donor in sel1 (surfactant is C/H/O/S only, 1920 C-H): 0.1.0 counted C-H...O artifacts; lat 0.2.0 refuses and gmx prints 'No Donors found'					delete
+22_surfactant/8x_system	invalid	22_surfactant/8x_system/hbond_surfactant_water.hbond.dist_xz.out.csv			no polar-H donor in sel1 (surfactant is C/H/O/S only, 1920 C-H): 0.1.0 counted C-H...O artifacts; lat 0.2.0 refuses and gmx prints 'No Donors found'					delete
+22_surfactant/8x_system	invalid	22_surfactant/8x_system/hbond_surfactant_water.hbond.dist_yz.out.csv			no polar-H donor in sel1 (surfactant is C/H/O/S only, 1920 C-H): 0.1.0 counted C-H...O artifacts; lat 0.2.0 refuses and gmx prints 'No Donors found'					delete

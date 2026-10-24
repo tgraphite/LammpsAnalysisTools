@@ -6,6 +6,7 @@ import numpy as np
 
 from ..core.errors import LatError
 from ..core.table import Field, Table
+from ..core.periodic import bond_graph_consistent
 from ..core.unwrap import build_adjacency, make_whole, molecule_groups
 from .base import Module, Param
 from . import register
@@ -54,6 +55,12 @@ class Gyrate(Module):
         rows = []
         for fr in ctx.frames(frames):
             if adj is not None:
+                if idx is not None and                         bond_graph_consistent(fr.positions, fr.box, topo, idx) is False:
+                    w = ("the bond graph of the selection wraps the periodic cell (a ring "
+                         "encircles the box), so whole-molecule reconstruction is "
+                         "inconsistent and this Rg is approximate; gmx refuses this case")
+                    if w not in warnings:
+                        warnings.append(w)
                 pos = make_whole(fr.positions, fr.box, adj=adj)[idx]
             else:
                 pos = make_whole(fr.positions[idx], fr.box, groups=groups)

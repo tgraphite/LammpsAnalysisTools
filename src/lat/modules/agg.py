@@ -68,7 +68,7 @@ class Agg(Module):
         spec_rows = []
         for fr in ctx.frames(frames):
             pos = fr.positions
-            e = edges(pos, aa, ba, fr.box, float(cutoff), mode)
+            e = edges(pos, aa, ba, fr.box, float(cutoff), mode, ctx.topo)
             comp = Components(len(am), len(bm), e)
             tc = comp.type_counts()
             typekeys |= set(tc)

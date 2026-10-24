@@ -72,8 +72,10 @@ def test_plot1d_smooth_is_a_plot_time_option(repo_root, sample_dir, tmp_path):
 
 
 def _write_lat_csv(path):
+    from lat import __version__
+
     path.write_text(
-        "# program: LAT version 0.1.0\n"
+        f"# program: LAT version {__version__}\n"
         "# module: test\n"
         "# columns: frame, A, B, C\n"
         "# --- data ---\n"

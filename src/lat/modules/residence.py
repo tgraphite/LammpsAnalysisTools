@@ -9,6 +9,7 @@ import numpy as np
 from ..core.correlate import linear_fit
 from ..core.errors import LatError
 from ..core.neighbor import pairs_within
+from ..core.periodic import periodic_distance, residue_com, residue_coms
 from ..core.table import Field, Table
 from ._graph import residues
 from .base import Module, Param
@@ -60,9 +61,14 @@ class Residence(Module):
         for c, fr in enumerate(ctx.frames(frames)):
             pos = fr.positions
             if mode == "center":
-                com_l = np.array([pos[a].mean(axis=0) for a in la])
-                com_r = pos[ref_idx].mean(axis=0)
-                d = np.linalg.norm(fr.box.minimum_image(com_l - com_r), axis=1)
+                com_l, ws = residue_coms(pos, fr.box, topo, la, what="ligand residue")
+                com_r, wr = residue_com(pos, fr.box, topo, ref_idx, what="reference group")
+                if wr and wr not in warnings:
+                    warnings.append(wr)
+                for w in ws:
+                    if w not in warnings:
+                        warnings.append(w)
+                d = np.array([periodic_distance(c_l, com_r, fr.box) for c_l in com_l])
                 present[d < float(cutoff), c] = True
             elif mode == "min":
                 ia, ib, _ = pairs_within(pos[lig_all], pos[ref_idx], fr.box, float(cutoff))

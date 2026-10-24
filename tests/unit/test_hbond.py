@@ -110,3 +110,74 @@ def test_hbond_midpoint_wraps_across_boundary():
                                   30.0, same=False, bonds_set=set())
     assert triples == {(0, 1, 2)}
     assert np.allclose(mids[0], [0.0, 0.0, 0.0], atol=1e-9)
+
+
+def _naive_acf(triple_frames):
+    """Reference ACF defined literally: re-AND lag+1 shifted slices per lag."""
+    import numpy as np
+
+    T = len(triple_frames)
+    universe = sorted(set().union(*triple_frames)) if triple_frames else []
+    idx = {t: i for i, t in enumerate(universe)}
+    present = np.zeros((len(universe), T), dtype=bool)
+    for k, s in enumerate(triple_frames):
+        for t in s:
+            present[idx[t], k] = True
+    total = present.sum()
+    inter = np.zeros(T)
+    cont = np.zeros(T)
+    if T:
+        cont[0] = 1.0
+    for lag in range(T):
+        inter[lag] = ((present[:, : T - lag] & present[:, lag:]).sum() * T
+                      / ((T - lag) * total)) if T > lag else 0.0
+        if lag == 0:
+            continue
+        run = present[:, : T - lag].copy()
+        for k in range(1, lag + 1):
+            run &= present[:, k: T - lag + k]
+        cont[lag] = run.sum() * T / ((T - lag) * total)
+    return inter, cont
+
+
+def test_acf_matches_the_naive_definition():
+    """The production ACF runs incrementally and drops finished pairs; both are
+    optimisations that must not change a single value."""
+    import numpy as np
+
+    from lat.modules.hbond import _acf
+
+    rng = np.random.default_rng(5)
+    for trial in range(4):
+        n_pairs, T = int(rng.integers(1, 25)), int(rng.integers(1, 40))
+        frames = []
+        for k in range(T):
+            frames.append({f"t{i}" for i in range(n_pairs) if rng.random() < 0.3})
+        if not any(frames):
+            frames[0] = {"t0"}
+        table, scalars, _ = _acf(frames)
+        want_inter, want_cont = _naive_acf(frames)
+        got = table.data
+        assert np.array_equal(got[:, 1], want_inter), (trial, "intermittent")
+        assert np.array_equal(got[:, 2], want_cont), (trial, "continuous")
+        assert scalars["tau_integral"] == pytest.approx(float(want_inter[1:].sum()))
+
+
+def test_acf_is_cheap_for_long_trajectories():
+    """A pair that is not continuously present cannot affect longer lags, so a
+    601-frame / 100k-pair case must finish in well under a second."""
+    import time
+
+    import numpy as np
+
+    from lat.modules.hbond import _acf
+
+    rng = np.random.default_rng(6)
+    frames = []
+    for k in range(400):
+        frames.append({f"p{i}" for i in rng.choice(100_000, 200, replace=False)})
+    t0 = time.time()
+    table, _, _ = _acf(frames)
+    elapsed = time.time() - t0
+    assert table.data.shape == (400, 3)
+    assert elapsed < 20.0, f"ACF took {elapsed:.1f}s for 400 frames"

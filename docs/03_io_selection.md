@@ -66,7 +66,7 @@
   后者 `Li=7.0` 与真实 6.94 差 0.86%，会超出 ±0.2% 而误报（已在样例中验证）。
 - 可用 `-types` 文件或 `lat.yaml:type_element` 显式覆盖。
 - vdW 半径表来自 `reax_tools::ELEMENT_ATOMIC_RADII`（Bondi 型），整表在 `lat.yaml:vdw`；
-  probe 用纯 vdW，键感知才用 `0.6*(ri+rj)`。
+  freevol/sasa 用纯 vdW，键感知才用 `0.6*(ri+rj)`。
 
 ## 11. 读取器细节（实现提醒）
 

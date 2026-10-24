@@ -29,17 +29,26 @@ def molecule_groups(mols):
     return [order[s:e] for s, e in zip(starts, list(starts[1:]) + [len(sm)])]
 
 
-def make_whole(pos, box, adj=None, groups=None):
+def make_whole(pos, box, adj=None, groups=None, seeds=None):
     """Return a copy of `pos` with each connected molecule made whole.
 
     `adj` (from build_adjacency) is preferred; `groups` (from molecule_groups)
     is the fallback when bond information is unavailable.
+
+    `seeds` restricts the traversal to the connected components that contain at
+    least one seed atom (requires `adj`); atoms outside those components are
+    returned unchanged. This keeps the per-frame cost proportional to the
+    selection instead of the whole system.
     """
     out = np.asarray(pos, float).copy()
     if adj is not None:
         n = len(out)
         seen = np.zeros(n, dtype=bool)
-        for s in range(n):
+        if seeds is None:
+            starts = range(n)
+        else:
+            starts = [int(s) for s in np.unique(np.asarray(seeds, dtype=int))]
+        for s in starts:
             if seen[s]:
                 continue
             seen[s] = True

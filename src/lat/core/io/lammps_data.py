@@ -179,6 +179,18 @@ def parse(path, *, style: str | None = None, cfg=None) -> Topology:
     def _re(x):
         return None if x is None else x[order]
 
+    # `bonds` above was built with id2idx, i.e. in *Atoms-section row* space.
+    # Every other per-atom array is re-sorted into id order just below, so the
+    # bond indices must follow the same permutation. Without this, a data file
+    # whose Atoms section is not already sorted by id yields a random bond
+    # graph (observed on an OVITO-written PET file: 880 of 6476 edges were real
+    # bonds, mean minimum-image "bond" length 8.1 A), which silently corrupts
+    # make-whole and therefore gyrate / rms / hbond.
+    if bonds is not None:
+        inv = np.empty(len(ids), dtype=int)
+        inv[order] = np.arange(len(ids))
+        bonds = inv[bonds]
+
     return Topology(
         n_atoms=natoms,
         atom_id=ids[order],

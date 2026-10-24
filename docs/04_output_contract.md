@@ -40,7 +40,7 @@ Table(
 ## 5. CSV 头（已冻结）
 
 ```
-# program: LAT version 0.1.0
+# program: LAT version 0.2.0
 # module: rdf
 # command: lat rdf -s sys.data -f sys.lammpstrj -sel1 type 1 -sel2 type 2
 #

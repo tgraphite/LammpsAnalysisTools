@@ -56,6 +56,10 @@ lat/
 │   ├── MANUAL_ALGORITHMS.md  **算法原理手册**（教材式，逐模块原理与精度）
 │   ├── 09_test_campaign.md   测试战役报告（静态分析/幂等/文档/真实项目）
 │   ├── 10_refdata_campaign.md 第三方 RefData 订单 + gmx 原生回归
+│   ├── 11_examples_recheck.md 0.2.0 对已有项目产物的复跑/覆盖报告
+│   ├── 12_0.2.0_release.md   0.2.0 发布说明（行为变更清单 + 验收）
+│   ├── data/                 产物级归档（0.2.0_examples_mapping.tsv 等）
+│   ├── figures/0.2.0/        修复前后对比图（16 张，见 11 号文档 §6）
 │   └── BYPASS.md             旁路记录：讨论过但暂不纳入的功能及理由（非 roadmap）
 ├── src/lat/                  实现（P0 起逐步填充）
 │   ├── core/                  IO/拓扑/选择/PBC/网格/相关/输出
@@ -64,6 +68,7 @@ lat/
 └── tests/
     ├── regression/
     │   ├── convert/          自研 gmx→lammps 转换器 + 校验（无需 InterMol/VMD）
+    │   ├── examples_recheck/ 复跑/覆盖/对比图工具（行为变更后重算已有产物）
     │   ├── samples/          已落盘自包含回归样例（sys1_reduced）
     │   ├── level1_algo/      原生 gmx → 算法回归
     │   └── level2_format/    转换后 → 格式回归
@@ -76,18 +81,33 @@ lat/
 
 ```
 core    io / topology / selection / pbc / neighbor / grid / correlate / output / context / config
-模块    rdf density hbond rms msd agg cluster pistack probe residence
+模块    rdf density hbond rms msd agg cluster pistack freevol sasa residence
         transport occupancy gyrate contact select describe
 绘图    plot1d plot2d
 ```
 
-回归：`pytest tests` **64 passed**。三级证据：
-- **单元/合成**（PBC、密度、MSD、RMSD、手算氢键/SSIP-CIP-AGG/ππ、FFV、滞留、占据、输运守卫）；
+回归：`pytest tests` **161 passed / 5 skipped**（含 level2；level1 逐值对拍为独立脚本，需本机 gmx）。四级证据：
+- **单元/合成**（PBC、密度、MSD、RMSD、手算氢键/SSIP-CIP-AGG/ππ、FFV、滞留、占据、输运守卫，
+  **键表 id 重排**）；
 - **E2E 冒烟**（真实 6600 原子样例逐模块跑通）；
-- **level1 对拍 gmx**（sys1–6 含 PMBA 聚合物：RDF/CN 相对误差 ≤0.2%，密度 <1%，MSD ~5%）。
+- **level1 对拍 gmx（GROMACS 原生输入）**（sys1–6 含 PMBA 聚合物：RDF/CN 相对误差 ≤0.2%，
+  密度 <1%，MSD ~5%）；
+- **level1 对拍 gmx（LAMMPS 输入，2026-10 新增）**：`convert/lammps_to_gmx.py` +
+  `level1_algo/gmx_ref_lammps.py`，在 4 链 PET（6200 原子 / 501 帧）上逐帧比
+  gyrate / rms / rmsf / sasa / rdf / hbond。结果：Rg 3e-4 Å、RMSD 1e-4 Å、RMSF 7e-4 Å、
+  RDF 配位数 0.26%、hbond 0.21%（详见 `tests/regression/level1_algo/README.md`）。
 
-测试战役报告见 `docs/09_test_campaign.md`（静态分析/幂等/文档/真实项目）与 `docs/10_refdata_campaign.md`（第三方 RefData 订单 + gmx 原生回归）。
-尚待：`hbond/gyrate/sasa/current` 与 gmx 逐值对拍；P1 审计。
+**0.2.0 修掉的四个缺陷**（都会改数值，`docs/12_0.2.0_release.md` 是完整清单）：
+1. `Bonds` 段写的是 **atom id** 而非 Atoms 段行号，Atoms 不按 id 排序时键图错乱 →
+   `gyrate`/`rms`/`hbond` 静默出错（OVITO 写的 PET：Rg 高估 3.6×）；
+2. `hbond` 把每一个 C–H 当给体 → 计数虚高（PET 体系 41.7 vs gmx 4.3/帧）；
+3. `sasa` 未用 PBC → 系统性高估 +14.2%（`gmx sasa` 对拍）；
+4. PSD 的 bin 宽/归一化/周期距离变换、connectivity 的环面与邻接全部重做。
+
+同时把 `probe`（体素网格 + 曲面混在一起）拆成 **`lat freevol`**（ffv/psd/connectivity）
+与 **`lat sasa`**（Shrake–Rupley）；`probe` 已删除，不留兼容壳。
+所有周期几何统一到 `lat.core.periodic`，并由 `tests/unit/test_no_ad_hoc_pbc.py` 守卫。
+尚待：`current` 与 gmx 逐值对拍；P1 审计。
 
 命令示例：
 ```
@@ -96,8 +116,7 @@ core    io / topology / selection / pbc / neighbor / grid / correlate / output /
 ./lat plot1d out/sys.rdf.out.csv
 ```
 
-剩余 P0 模块（`density` `hbond` `rms` `msd` `agg` `cluster` `pistack` `probe` `residence`
-`transport` `occupancy` `gyrate` `contact`）按 `docs/08_handoff.md` 的顺序继续。
+剩余 P0 收尾（`current`、P1 审计）按 `docs/08_handoff.md` 的顺序继续。
 P1 = 待 P0 验收后开发；P2 = 关键点验证后再开发（当前 `order`、`occupancy` 的分子体积自动 zone）。
 
 ## 快速约定

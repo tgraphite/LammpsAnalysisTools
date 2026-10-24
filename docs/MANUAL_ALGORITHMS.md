@@ -19,23 +19,51 @@
 - **整分子复原（make-whole）**：当分子横跨盒面时，wrapped 坐标会把一个分子拆成两半。
   按键连接做生成树遍历，把每个原子相对其成键邻居用 MIC 摆正（等价 gmx `rmpbc`）。
   仅按“相对首原子 MIC”对长于半盒的链会失败，因此必须用键连接。`gyrate`/`rms` 依赖此法。
+- **键表按 atom id 解释，且必须与拓扑一起重排**：`Bonds` 段写的是 **atom id**（不是 Atoms 段的
+  行号），而 `Topology` 的所有逐原子数组都按 **id 升序**存放。data 文件的 Atoms 段**不保证**按 id
+  排序（OVITO 写的文件就不是），因此解析时必须把键索引施加与坐标相同的置换。
+  漏掉这一步会让键图变成随机重连，`make_whole` 去连接相距 8–45 Å 的非键合原子对，
+  gyrate / rms / hbond **静默出错**（实测 OVITO 写的 PET：6476 条“键”里只有 880 条是真的，
+  Rg 高估 3.6×、RMSF 高估 4.5×）。回归：`tests/unit/test_bond_atom_order.py`。
 
-### 0.3 邻居搜索
+### 0.3 周期几何的唯一入口（`lat.core.periodic`，0.2.0）
+0.1.0 里"周期几何"有四套并行实现，其中三处把 wrapped 坐标当成物理坐标用（SASA 丢邻居、
+`contact/residence -mode center` 直接对 wrapped 求平均、`pistack` 用裸坐标算环心），
+只有 `Box.minimum_image` / `pairs_within` / `make_whole` 三处是原则性的。
+
+0.2.0 起，所有周期判断必须走一个入口，共四层：
+
+| 层 | 函数 | 用途 |
+|---|---|---|
+| 分子 | `whole_positions` / `residue_com(s)` | 整分子复原、质心（可限定 `seeds` 只遍历选区所在分子）|
+| 原子对 | `periodic_neighbors` / `periodic_nearest` / `periodic_vector` / `periodic_distance` | 周期邻域、周期最近点、MIC 位移/距离 |
+| 体素网格 | `grid_axes` / `voxel_occupancy` / `periodic_distance_transform` / `label_periodic` | 周期占据、**环面**距离变换、**环面**连通分量（仅正交盒）|
+| 曲面 | `sasa_shrake_rupley` | 周期 Shrake–Rupley |
+
+架构守卫测试 `tests/unit/test_no_ad_hoc_pbc.py` 会失败于任何模块自建 `cKDTree` /
+`distance_transform_edt` / `ndimage.label` / `np.pad` / 裸 `minimum_image`，
+并强制 PBC 敏感模块按下表引用对应符号（`rdf -intramol` 除外：它统计的是**成对** MIC 距离，
+在 wrapped 坐标上本来就正确，`tests/regression/level2_format/test_pbc_invariance.py` 固定了这一点）。
+
+判据：把整个体系做一次非格点平移，所有**物理量必须不变**。
+`test_pbc_invariance.py` 对 contact/min·center、residence/min·center、pistack、agg、cluster、rdf 逐列对拍两个平移位置。
+
+### 0.4 邻居搜索
 在 cutoff 内找原子对：
 - 正交盒：`scipy.spatial.cKDTree(boxsize=L)`，坐标先平移到 `[0,L)`（注意盒子原点非零）。
 - 三斜盒：把 B 复制到相邻镜像格点后再建树（镜像数由面高 `V/area` 决定）。
 - 自身配对（`same`）只返回无序对一次；不同集合返回所有对。
 
-### 0.4 归一化自检
+### 0.5 归一化自检
 凡“分布 + 积分”成对的量（RDF/配位数、密度/总质量、电流自相关/电导），
 实现内部保证两者数学自洽，并在偏差超阈值时 `WARNING`（不静默修正）。
 
-### 0.5 输出契约
+### 0.6 输出契约
 每个模块返回若干 `Table`，写为 CSV。文件名 `<基名>.<标签>[.<模式>].out.csv`；
 文件头含 units、selection、frame_range、scalars、warnings、command、version。
 屏幕只出进度/警告/路径。物理参数**全部**来自配置或命令行，代码不含隐藏默认值。
 
-### 0.6 符号与缩写（全文通用）
+### 0.7 符号与缩写（全文通用）
 
 | 记号 | 含义 |
 |---|---|
@@ -122,6 +150,13 @@ GROMACS 轨迹无 image flags，读取时逐帧 MIC 重建连续坐标（与 gmx
 $R_g=\sqrt{\sum m_i|\mathbf r_i-\mathbf r_{cm}|^2/\sum m_i}$。
 **关键**：先按键连接整分子复原，再算 $R_g$；否则跨盒聚合物会被系统性低估
 （实测 nafion 未复原 3.7 nm vs gmx 6.8 nm，修复后偏差 <1e-3 nm）。无质量时用等权并 WARN。
+键表本身必须正确解释（见 §0.2 的 id 重排）；键图错了这一步会给出比“未复原”更离谱的**高估**。
+与 `gmx gyrate` 的逐值对拍见 `tests/regression/level1_algo/README.md`（Rg 逐帧一致到 3e-4 Å）。
+
+**多分子选择（`-sel all`）的固有歧义**：Rg 不是周期体系的平移不变量。每个分子可以被放在任意
+周期像里，`make_whole` 只能把“某个分子内部”摆正，分子之间的相对位置仍依赖锚点约定。
+实测 4 条链、盒长 80 Å：LAT 的锚点给 27.4 Å，改成“按各链质心回绕”给 32.0 Å（差 17%）。
+**结论：周期盒里报单链（或按分子分别算）的 Rg，不要用 `-sel all` 的均值下结论。**
 
 ---
 
@@ -149,6 +184,11 @@ RMSD 在主选组上算；RMSF 是**对齐后各帧坐标相对其时间平均�
 **判据（对齐 gmx）**：D···A ≤ 3.5 Å（`-distance_mode DA`，或 `HA` 用 H···A），
 且**在给体 D 处**的 H–D···A 夹角 ≤ 30°（即 $\cos\angle(D\to H,D\to A)\ge\cos30°$）。
 所有矢量 MIC。需要键信息识别 D–H；`sel1`/`sel2` 必须相同或完全不重叠。
+
+**给体必须是电负性重原子**（N/O/F/S/Cl/Br/I，与受体同一集合）。**C–H 不是氢键给体**：
+把“任何带 H 的重原子”当给体，会让聚合物里每个 CH₂/CH₃ 碳都成为给体，计数比 gmx 高一个量级
+（PET 实测 41.7 vs 4.3 每帧；修正后逐帧完全相同）。无电负性给体时**直接 ERROR**，
+与 gmx 的 `No Donors found` 行为一致（`sys1_reduced` 这类只有 C–H 的体系即属此列）。
 
 **统计**：逐帧计数；存在函数自相关
 $C(\tau)=\langle h(t)h(t+\tau)\rangle/\langle h(t)\rangle$，分间断（可离开再回）与连续（不允许中断）；
@@ -215,23 +255,109 @@ cutoff 过大导致全连通时会 WARN。
 
 ---
 
-## 12. 自由体积 / 孔隙 / SASA（probe）
+## 12. 自由体积 / 孔径 / 连通性 / SASA（`freevol` + `sasa`）
 
-共用“探针 + vdW 球 + 空间占据”内核，`-mode` 切换：
-- **ffv**：盒内布网格，格点若落在任一原子 $(r_{vdW}+r_{probe})$ 球内则算占据，
-  FFV=空闲/总。标记时各轴周期回绕（贴边原子不漏）。
-- **psd**：对空闲空间做距离变换 $d(x)$，孔半径 $r=d-r_{probe}$，局部极大为孔心，按体素体积加权成 PSD
-  （探针-网格近似，与 Zeo++ 的 Voronoi 不同，不做外接）。
-- **porosity**：空闲体积/总体积。
-- **connectivity**：空闲格点连通分量（6/26 邻接），输出体积与是否贯通。
-- **sasa**：Shrake–Rupley，按 $(r_{vdW}+r_{probe})$ 球面采样 M 点，暴露点比例×球面积。
+0.2.0 把原来的单模块 `probe` 拆成两个，因为它们是**两类不同算法**，只共享"vdW 半径 + 探针半径"：
 
-**可复现参数**：网格每轴 `n=round(L/dr)`、格点取 bin 中心，`-grid_dr` 默认 0.5 Å；当总格点 >5e7 时
-自动按 `(ntotal/5e7)^(1/3)` 放大 `dr` 并 WARN（因此实际 `dr` 可能大于请求值）。PSD 用
-`distance_transform_edt`，以 `r=d-r_probe`，取 3×3 局部极大为孔心，按体素体积 `dr³` 加权成 `dv/dr`。
-SASA 用 Shrake–Rupley，球面采样点数 `M`=`config.modules.probe.sasa_points`（默认 92）。
-vdW 半径来自配置元素表（全周期表）；探针默认 1.445 Å（H₂）。缺元素会报错并提示补
-`Masses`/`element`/`-types`。connectivity 当前**不闭合 PBC 环面**（按首帧报告）。
+- **`lat freevol`**（体素网格类）：FFV / PSD / 连通性。占用 = 格点中心落在任一原子的
+  $(r_{vdW}+r_{probe})$ 球内，各轴按 MIC 回绕。
+- **`lat sasa`**（曲面类）：Shrake–Rupley，不需要网格。
+
+拆的理由：`probe -mode all` 把 3 个体素网格模式和 1 个曲面模式绑在一起跑；PSD/连通性很少用，
+而 PSD 每帧还要额外算一次距离变换（实测 PET 体系 6.6 s/帧 vs FFV 0.5 s/帧）。
+`probe` 已删除，**不留兼容壳**：传入 `probe` 会直接报"unknown module"。
+
+### 12.1 freevol
+
+**共同前提**：网格分析要求**正交且固定**的盒子。笛卡尔体素网格只在正交盒上周期自洽；
+三斜盒直接报错；所选帧内盒子漂移 >2% 报错，0.1%–2% 给 WARN 且网格锁定在首帧。
+每轴 `n=round(L/dr)`、格点取 bin 中心、`-grid_dr` 默认 0.5 Å；总格点超过上限
+（ffv 5e7、psd/connectivity 2.5e7）时按 $(n_{total}/cap)^{1/3}$ 放大 `dr` 并 WARN（因此实际 `dr` 可能大于请求值）。
+
+- **ffv**：$FFV=$ 空闲格点/总格点，逐帧输出 `ffv_mean`/`ffv_std`。占用判据与 0.1.0 相同，数值可逐位复现。
+- **connectivity**：自由格点的连通分量，**环面闭合**，默认 **26 邻接**（6 连通固体的补集本该用 26）。
+  输出逐帧汇总 `n_components / n_percolating / v_largest / frac_largest / v_percolating`，
+  `-components` 才另写逐分量表（0.1.0 无条件逐帧写全部分量）。
+- **psd**：见 12.2。
+
+### 12.2 PSD 的定义与归一化（0.2.0 重定义）
+
+1. 距离变换对**未加探针的 vdW 占据**做（Gelb–Gubbins 口径），得每个格点到最近固体表面的距离 $d$；
+2. 可及性用**加了探针**的占据集：$free=\lnot occ(r_{vdW}+r_{probe})$；
+3. 在 free 区取 $d$ 的局部极大为孔心：用 26 连通**平台去重**（立方格点的 EDT 到处是山脊/平台，
+   直接用 `==` 会把整片平台都当孔心——0.1.0 因此报出 0.055 Å 的伪主峰）；
+4. 每个自由格点按**周期最近孔心**归属（Voronoi 分配），权重 = 该孔心分到的自由体积；
+5. $dV/dr$ 用固定 bin 宽（`= grid_dr`）与范围 `[0, -psd_rmax]`（默认由数据定），
+   归一化到 $\int (dV/dr)\,dr = 1$；文件头 `scalars: integral` 给出实测积分。
+
+与 0.1.0 的差别（每条都在文件头/本节声明）：0.1.0 用 $r=d-r_{probe}$（多减一个探针半径）、
+bin 宽随数据范围变化（PET 实测 0.944 Å，而文件头写 `grid_dr=0.5`）、只统计孔心格点
+（$\int = 1.5\times10^{-4}$，即只有 0.015% 的自由体积被计入）、且只用第 0 帧却在文件头写全部帧。
+0.2.0 逐帧累加（PET 回归用 `-stride 10` 覆盖 0–500 帧），文件头的 `frame_range` 与实际数据一致。
+
+### 12.3 connectivity 的可读性
+
+0.1.0 在 FFV≈83% 的体系里逐帧输出 ~165 个分量（501 帧 = 8 万行），其中 112 个是单体素栅格粉尘，
+最大分量恒为盒体积的 83%、恒标 `percolating=1`——表里看不出"结构是否贯通"。
+0.2.0 逐帧汇总后 `frac_largest` 直接回答这个问题：PET 体系 frame 0 为 0.99989、frame 1 为 0.99998，
+即自由空间基本是**一个贯通网络 + 少量孤立小孔**（分量数 35 → 17 是这些小孔的消长，不是数值噪声）。
+
+### 12.4 sasa
+
+Shrake–Rupley：每个原子以 $r_{vdW}+r_{probe}$ 为半径撒 M 个 Fibonacci 球面点（默认 92），
+落在任何邻居球内即被遮挡，$SASA = 4\pi r^2 \times$ 暴露点比例。
+
+- **邻域搜索与遮挡判定都用 MIC**。0.1.0 用裸 `cKDTree(pos)`，贴面原子丢周期性邻居 → 系统性高估：
+  PET 体系对 `gmx sasa` 偏高 **+14.2%**，修正后 **−0.2%…−0.8%**（§12.5）。
+- 表面**始终用全部原子**构建，`-sel` 只决定"单独报哪部分原子的贡献"；输出两列
+  `sasa_total` 与 `sasa_sel`。0.1.0 只用被选中的原子做遮挡，会高估选区面积。
+- 迁移：`lat probe -mode sasa -sel X` → `lat sasa -sel X`。
+
+### 12.5 与原生 gmx 对拍（2026-10，已改行为）
+
+`tests/regression/level1_algo/gmx_ref_lammps.py` 把 LAMMPS 输入转成 GROMACS 后与原生 gmx 逐帧对拍。
+PET 柱状体系（6200 原子 × 501 帧，`gmx 2022.5`）：
+
+| 量 | lat | gmx | 平均\|Δ\| | max\|Δ\| | 相对 |
+|---|---|---|---|---|---|
+| gyrate（全体）| 26.8319 Å | 26.8316 Å | 0.0003 Å | 0.0004 | 0.001% |
+| gyrate（单链 1–4）| 25.2776 / 25.3872 / 24.0370 / 25.4916 Å | 25.2778 / 25.3874 / 24.0371 / 25.4918 | 0.0002 Å | 0.0005 | 0.001% |
+| RMSD（`gmx rms -nomw`）| 8.2829 Å | 8.2830 Å | 0.0001 Å | 0.0002 | 0.001% |
+| RMSF（`gmx rmsf -fit yes`，6200 原子）| 2.3167 Å | 2.3167 Å | 0.0007 Å | 0.0038 | 0.032% |
+| **SASA（0.1.0）** | **18316.9 Å²** | **16033.4 Å²** | **2283.6 Å²** | **2917.3** | **+14.24%** |
+| hbond（给体数）| 6.6028 | 6.6168 | 0.0140 | 1.0 | 0.21% |
+| RDF 配位数（C-O / C-C / O-O）| 6.2959 / 6.3286 / 4.9969 | 6.2818 / 6.3284 / 4.9968 | 0.09 / 0.10 / 0.04 | — | 0.26 / 0.27 / 0.27% |
+
+> SASA 一行是 **0.1.0** 的实测值（说明缺陷量级）。0.2.0 的周期化实现复测（同一 501 帧窗口）：
+> **全 501 帧均值 15946.5 Å² vs `gmx sasa` 16033.4 Å²，平均绝对偏差 94.1 Å² = +0.59%**
+> （逐帧 −0.17%…−0.85%）；残余偏差来自球面采样点分布（gmx 与 lat 各自用 92 点但分布不同），
+> 详见 `docs/11_examples_recheck.md`。
+> 大体系复测：32800 原子的水/表面活性剂体系，`lat hbond -sel1 all -sel2 all` 均值
+> 13908.8 vs `gmx hbond`（同 40 帧窗口）13808.5，差 **+0.7%**。
+
+**gmx 的给体判据（与 lat 0.2.0 一致）**：只有电负性重原子（N/O/F/S/Cl/Br/I）上连的 H 才算给体。
+实测（PET 体系，`gmx hbond` 输出原文）：
+
+- `El_C`(给体组) / `El_O` → `Found 0 donors and 1128 acceptors` + `No Donors found`（**直接报错**）；
+- `El_O` / `El_C` → 同样 0 donors（因为 H 不在两组之并集里）；
+- `System` / `System` → `Found 8 donors and 1128 acceptors`（正是 4 条 PET 链的 8 个端羟基）。
+
+**gmx 的选择语义（与 lat 不同，见 §17）**：`gmx hbond` 在**两组之并集**内识别给体/受体，
+统计的是两组"之间"的氢键（两个方向都算）；lat 的 `-sel1` 是**给体组**、`-sel2` 是**受体组**，
+方向明确。`-sel1 all -sel2 all` 时两者等价。
+
+**受体集合的差异（2026-10 新增，已确认未改）**：lat 的受体是 `{N,O,F,S,Cl,Br,I}`，
+gmx 在这三个体系里只把 **O** 算作受体（PET 1128、22 号 8480、24 号 4136 个受体原子）：
+
+| 体系 | lat − gmx | 原因 |
+|---|---|---|
+| PET（只有 C/H/O）| +0.21% | 集合相同 |
+| 水/表面活性剂（有 S）| +0.7% | 硫酸根 S 很少满足几何判据 |
+| LiCl/电极（144 个 Cl⁻）| **+13.8%** | Cl⁻ 是强受体，gmx 不认 |
+
+即：**含卤素（或硫）的体系里，lat 的氢键计数会高于 gmx，且差值可解释**。
+lat 的口径在化学上更完整（Cl⁻/S 确实是受体）；要逐值对齐 gmx 需要一个 `-acceptors gmx` 开关，
+本轮未加（见 `docs/12_0.2.0_release.md` §6）。
 
 ---
 
@@ -296,9 +422,20 @@ vdW 半径来自配置元素表（全周期表）；探针默认 1.445 Å（H₂
 
 - **适用**：正交/三斜周期盒；LAMMPS `data`+`dump`；GROMACS `tpr`+`xtc/trr`（内部回归用）。
 - **不适用/限制**：
-  - 粗粒化、无元素体系不支持 probe/hbond（化学身份缺失，报错清晰）。
+  - 粗粒化、无元素体系不支持 freevol/sasa/hbond（化学身份缺失，报错清晰）。
   - 反应轨迹原子数逐帧变化：报错并建议限定一致窗口。
   - `hbond` 存在的自相关在数千帧长轨迹上为 O(T²)，建议窗口/子采样。
-  - `probe` 的 PSD/connectivity 为网格近似；connectivity 暂不闭合 PBC 环面。
+  - **`freevol` 的体素网格要求正交且固定盒**（三斜/盒子漂移 >2% 直接报错，0.1%–2% WARN）；
+    PSD/connectivity 都是网格近似，不是 Zeo++ 的 Voronoi/几何算法。
+  - **`contact` / `residence -mode center` 的选择若"跨盒且非整分子"**，质心依赖参考原子，
+    lat 会给 WARN 并报出歧义大小（阈值 0.1 Å）；要精确请选整分子。gmx 在等价场景下
+    靠 `rmpbc` + 质心（质量加权）实现，见 `docs/11_examples_recheck.md` §4。
+  - **`hbond` 的选择语义与 gmx 不同**：lat 的 `-sel1` 是给体组、`-sel2` 是受体组（有方向）；
+    `gmx hbond` 在两组的**并集**里识别给体/受体，统计两组之间的氢键（方向无关）。
+    两者只在 `-sel1 all -sel2 all` 时等价。当 `-sel1` 里没有电负性 H 时 lat 报错
+    （gmx 在并集也没有 H 时同样报 `No Donors found`）。
+  - `-mode center` 的质心是**几何中心**（未按质量加权），gmx 的 `com of group` 是质量加权，
+    实测差异 0.01 Å（PET 体系，见 `docs/11_examples_recheck.md` §4）。
+  - **`gyrate -sel all` 在多分子周期体系里不是良定义量**（周期像歧义可达 17%，§4）。
   - `occupancy` 的“按分子体积自动生成 zone”未实现。
   - 能量/自由能、PMF、对接、phonon、AIMD 等不在范围内（见 `docs/01_meta_requirements.md`）。

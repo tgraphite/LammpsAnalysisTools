@@ -14,7 +14,8 @@ from pathlib import Path
 
 import yaml
 
-from .core.errors import LatError
+from . import __version__
+from .core.errors import LatError, get_logger
 
 _MISSING = object()
 
@@ -74,4 +75,10 @@ def load(path=None) -> Config:
         raw = yaml.safe_load(fh)
     if not isinstance(raw, dict):
         raise LatError(f"config file {p} must contain a mapping at top level")
+    declared = (raw.get("meta") or {}).get("version")
+    if declared is not None and str(declared) != __version__:
+        get_logger().warning(
+            f"config {p} declares meta.version {declared} but this lat is "
+            f"{__version__}; module parameters may not match this release"
+        )
     return Config(raw, p)

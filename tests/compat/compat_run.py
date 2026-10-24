@@ -219,8 +219,8 @@ def battery(topo: Path, dump: Path, cwd: Path, tmp: Path, timeout: float):
                      "-cutoff", f"{c:.3f}", "-o", o], True),
         ("occupancy", ["occupancy", *base, *fr, "-sel", f"type {t1}",
                        "-zone", f"z:0-{half:.3f}", "-o", o], True),
-        ("probe_ffv", (["probe", *base, *fr, "-mode", "ffv", "-o", o]
-                       if (d["masses"] or "element" in dm["cols"]) else None), True),
+        ("freevol_ffv", (["freevol", *base, *fr, "-mode", "ffv", "-o", o]
+                         if (d["masses"] or "element" in dm["cols"]) else None), True),
     ]
     if has_vel:
         cases.append(("transport", ["transport", *base, *fr, "-sel", f"type {t1}", "-o", o], True))
@@ -298,7 +298,7 @@ def main():
     Path(a.json).write_text(json.dumps(results, indent=1))
     lines = ["# lat compatibility report", ""]
     mods = ["describe", "select", "rdf", "density1d", "gyrate", "rms", "msd", "contact",
-            "occupancy", "probe_ffv", "transport", "hbond", "agg", "cluster", "residence", "pistack"]
+            "occupancy", "freevol_ffv", "transport", "hbond", "agg", "cluster", "residence", "pistack"]
     lines.append("| dump | " + " | ".join(mods) + " |")
     lines.append("|" + "---|" * (len(mods) + 1))
     fails = []

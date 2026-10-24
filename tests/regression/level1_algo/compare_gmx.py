@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -27,7 +29,10 @@ from lat.core.context import Context  # noqa: E402
 from lat.core.io import open_system  # noqa: E402
 from lat.modules import get  # noqa: E402
 
-GMX = "/usr/local/gromacs/bin/gmx"
+# gmx is resolved from $GMX or $PATH; the 2023.2 tree this repo was
+# written on lives at /usr/local/gromacs/bin/gmx, but Debian ships
+# /usr/bin/gmx (2022.5) and both are accepted.
+GMX = os.environ.get("GMX") or shutil.which("gmx") or "/usr/local/gromacs/bin/gmx"
 
 
 def read_xvg(path):
@@ -38,7 +43,7 @@ def read_xvg(path):
 def run_gmx(base_xtc, base_tpr, ref, sels, bin_nm, rmax, b, e, outdir):
     out = outdir / "gmx_g.xvg"
     cn = outdir / "gmx_cn.xvg"
-    env = {"GMX_MAXBACKUP": "-1", "PATH": "/usr/local/gromacs/bin:/usr/bin:/bin"}
+    env = {"GMX_MAXBACKUP": "-1", "PATH": os.path.dirname(GMX) + ":/usr/bin:/bin"}
     cmd = [GMX, "rdf", "-f", str(base_xtc), "-s", str(base_tpr),
            "-o", str(out), "-cn", str(cn), "-bin", str(bin_nm),
            "-sel", *sels, "-ref", ref, "-b", str(b), "-e", str(e), "-rmax", str(rmax)]

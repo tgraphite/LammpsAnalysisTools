@@ -6,6 +6,7 @@ import numpy as np
 
 from ..core.errors import LatError
 from ..core.neighbor import pairs_within
+from ..core.periodic import periodic_distance, residue_com
 from ..core.table import Field, Table
 from .base import Module, Param
 from . import register
@@ -44,9 +45,14 @@ class Contact(Module):
             i, j, d = pairs_within(pos[s1.indices], pos[s2.indices], fr.box, float(cutoff))
             n_contact = len(d)
             min_d = float(d.min()) if n_contact else float("nan")
-            com1 = pos[s1.indices].mean(axis=0)
-            com2 = pos[s2.indices].mean(axis=0)
-            com_d = float(np.linalg.norm(fr.box.minimum_image(com1 - com2)))
+            com1, w1 = residue_com(pos, fr.box, ctx.topo, s1.indices,
+                                   what=f"sel1={s1.literal}")
+            com2, w2 = residue_com(pos, fr.box, ctx.topo, s2.indices,
+                                   what=f"sel2={s2.literal}")
+            for w in (w1, w2):
+                if w and w not in warnings:
+                    warnings.append(w)
+            com_d = periodic_distance(com1, com2, fr.box)
             rows.append((fr.index, n_contact, min_d, com_d))
         data = np.array(rows, float)
         if np.all(np.isnan(data[:, 2])):

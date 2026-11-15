@@ -38,7 +38,7 @@ _THREAD_LOCK = threading.Lock()
 _THREAD_STARTED = False
 
 
-@dataclass(slots=True)
+@dataclass
 class CheckResult:
     latest: str | None
     source: str | None

@@ -2,6 +2,13 @@
 
 本文件记录 lat 的版本变更。开发文档只保留本文件与 [MODULE_STATUS.md](MODULE_STATUS.md)；面向用户的使用说明见 [README.md](../README.md)，逐模块手册见 [manual/](manual/README.md)。
 
+## [1.1.1] — 2026-11-15
+
+### 修复
+
+- 更新检查模块使用了 `dataclass(slots=True)`（Python 3.10+），而 lat 声明支持 Python 3.9；
+  改为普通 `dataclass`，恢复 3.9 兼容性。
+
 ## [1.1.0] — 2026-11-15
 
 新增交互终端下的自动更新提示；只提示，不自动安装。

@@ -40,21 +40,24 @@ def _adjacency(n_atoms, bonds):
 class HBond(Module):
     name = "hbond"
     summary = "hydrogen bonds: count, ACF, lifetime and geometry distributions"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/hbond.md"
     inputs = ["-s", "-sel1", "-sel2"]
     outputs = ["<base>.hbond.out.csv", "<base>.hbond.acf.out.csv", "<base>.hbond.dist_*.out.csv"]
     params = [
         Param("sel1", flags=("-sel1",), help="donor group (default: all donors)"),
         Param("sel2", flags=("-sel2",), help="acceptor group (default: all acceptors)"),
-        Param("distance", flags=("-distance",), config="modules.hbond.distance", type="float"),
+        Param("distance", flags=("-distance",), config="modules.hbond.distance", type="float",
+              help="D...A (or H...A) cutoff in Angstrom"),
         Param("distance_mode", flags=("-distance_mode",), config="modules.hbond.distance_mode",
-              choices=("DA", "HA"), help="DA (gmx default) or HA"),
-        Param("angle", flags=("-angle",), config="modules.hbond.angle", type="float"),
-        Param("nbins", flags=("-nbins",), config="modules.hbond.nbins", type="int"),
+              choices=("DA", "HA"), help="distance measured D...A (gmx default) or H...A"),
+        Param("angle", flags=("-angle",), config="modules.hbond.angle", type="float",
+              help="maximum D-H...A angle in degrees"),
+        Param("nbins", flags=("-nbins",), config="modules.hbond.nbins", type="int",
+              help="bins per axis for the xz/yz/xy geometry maps"),
         Param("lifetime", flags=("-lifetime",), config="modules.hbond.compute_lifetime",
-              type="flag", help="compute ACF and lifetime"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+              type="flag", help="compute the ACF and lifetime tables"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel1, sel2, distance, distance_mode, angle, nbins,

@@ -20,7 +20,7 @@ from . import register
 class Residence(Module):
     name = "residence"
     summary = "ligand residence time (intermittent/continuous ACF + intervals)"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/residence.md"
     inputs = ["-s", "-ref", "-lig", "-cutoff"]
     outputs = ["<base>.residence.out.csv", "<base>.residence.acf.out.csv",
                "<base>.residence.intervals.out.csv"]
@@ -28,13 +28,15 @@ class Residence(Module):
         Param("ref", flags=("-ref",), required=True, help="reference group"),
         Param("lig", flags=("-lig",), required=True, help="ligand group"),
         Param("cutoff", flags=("-cutoff",), config="modules.residence.cutoff", type="float",
-              required=True),
+              required=True, help="binding cutoff in Angstrom (required; no default)"),
         Param("mode", flags=("-mode",), config="modules.residence.mode",
-              choices=("min", "center")),
+              choices=("min", "center"),
+              help="distance criterion: min atom-atom or residue COM distance"),
         Param("definition", flags=("-definition",), config="modules.residence.definition",
-              choices=("cont", "inter", "both")),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+              choices=("cont", "inter", "both"),
+              help="lifetime definition(s) to report"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, ref, lig, cutoff, mode, definition, frame_range, stride):

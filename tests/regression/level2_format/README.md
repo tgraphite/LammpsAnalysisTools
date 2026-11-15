@@ -1,4 +1,4 @@
 # level2_format
 
-同一体系转成 LAMMPS data + lammpstrj 后跑 lat，与 level1 结果比对，验证格式解析。
-样例见 ../samples/sys1_reduced。
+用自包含样例 `../samples/sys1_reduced/` 验证 LAMMPS data + lammpstrj 的解析、模块输出契约与
+PBC 平移不变性。数值算法细节由 `tests/unit/` 覆盖。

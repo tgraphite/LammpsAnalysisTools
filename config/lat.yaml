@@ -1,33 +1,20 @@
 # =============================================================================
-# lat.yaml — 唯一配置来源（开发人员用，位于程序根目录）
+# lat.yaml — lat 的唯一默认值来源
 # -----------------------------------------------------------------------------
-# 规则（M11 + 决策18）：
-#   * 本文件由开发人员维护，定义默认值/单位/文档入口/输出模板；用户不编辑它。
-#   * 所有“物理”参数都必须同时有命令行开关；命令行覆盖本文件。
-#   * 代码中不得出现任何 backup 默认值；本文件缺键/类型不符 → ERROR 中断。
-#   * 单位：默认长度 Å（real/metal 都是 Å）；未显式给 unit 时报 INFO。
+#   * 本文件定义默认值、输出模板与元素表；命令行参数覆盖本文件。
+#   * 代码中不得出现物理参数的备用默认值；本文件缺键 → ERROR 中断。
+#   * 单位：长度 Å（real/metal 都是 Å）；时间轴统一用帧号。
+#   * 安装后的副本位于 lat/data/lat.yaml，两份文件必须逐字节一致。
 # =============================================================================
 
 meta:
-  version: 0.2.0
-  units:                     # 内部统一单位
-    length: Angstrom
-    time: frame              # M2：时间即帧号，忽略 LAMMPS 时间字段
-    mass: g/mol
-    charge: e
-    temperature: K
-    density: kg/m^3
-    diffusion: 1e-5 cm^2/s
-    conductivity: S/m
+  version: 1.0.0
   frame_interval: null       # 帧间距(ps)，仅用于“换算展示”寿命/滞留；null=只报帧数
 
 io:
   # LAMMPS data/dump 文件都不携带 units/atom_style，必须显式或推断。
-  default_unit: real         # real|metal|lj|si|cgs；未显式给 -unit 时用此值并报 INFO
+  default_unit: real         # real|metal|lj；未显式给 -unit 时用此值并报 INFO
                              #   5列=atomic, 7列=full；6列歧义需 -style
-  pbc: true                  # 隐藏开关 -pbc；默认开
-  unwrap: false              # msd/transport 显式打开
-  triclinic: true
   backup_on_conflict: true   # 同名输出已存在 → 旧文件改名 .bak.1/.bak.2...
 
 # type -> element：默认由质量 ±0.2% 匹配元素表推断；多解/无解 → ERROR。
@@ -199,60 +186,48 @@ element_mass:
 
 modules:
   rdf:
-    help: docs/MANUAL_ALGORITHMS.md
     nbins: 200
-    cutoff: 10.0             # Å（默认，限制计算量；不随盒子膨胀）
+    cutoff: 10.0             # Å；默认值，不随盒子膨胀
     intramolecular: false    # 默认排除同分子内对；-intramol 打开（true=包含分子内）
-    normalization: number_density
-    compute_coordination: true
 
   density:
-    help: docs/MANUAL_ALGORITHMS.md
     dim: 1
     nbins: 200
     axis: z
     quantity: mass           # mass|number
 
   hbond:
-    help: docs/MANUAL_ALGORITHMS.md
-    distance: 3.5            # Å；对齐 gmx 默认（D···A, -da yes）
+    distance: 3.5            # Å；对齐 gmx 默认（D···A）
     distance_mode: DA        # DA（gmx 默认）| HA
     angle: 30                # deg；判据 D-H...A > 180-angle = >150
     nbins: 50
     compute_lifetime: true
 
   rms:
-    help: docs/MANUAL_ALGORITHMS.md
     ref: first
     rmsf: true
 
   msd:
-    help: docs/MANUAL_ALGORITHMS.md
     dim: 3                   # 3|2
     fit_range: null
     remove_com: true         # 默认去质心漂移
     seltype: atom            # atom | mol_com（对齐 gmx msd -seltype mol_com）
 
   agg:
-    help: docs/MANUAL_ALGORITHMS.md
     mode: min                # min|center
-    cutoff: null             # 必填：用户必须显式给（P0 决策）
+    cutoff: null             # 必填：用户必须显式给
     solv: null
-    edge_conservation_tol: 0.02
 
   cluster:
-    help: docs/MANUAL_ALGORITHMS.md
     mode: min
     cutoff: null             # 必填
     focus: false
 
   pistack:
-    help: docs/MANUAL_ALGORITHMS.md
-    distance: 5.5            # Å（沿用已验证代码的量纲换算）
+    distance: 5.5            # Å
     angle: 30
 
   freevol:
-    help: docs/MANUAL_ALGORITHMS.md
     radius: 1.445            # Å；H2 动力学直径 2.89 Å 的一半
     mode: ffv                # ffv|psd|connectivity（网格分析需正交且固定盒）
     grid_dr: 0.5             # Å
@@ -261,38 +236,24 @@ modules:
     components: false        # true 时另写逐分量表
 
   sasa:
-    help: docs/MANUAL_ALGORITHMS.md
     radius: 1.445            # Å；探针半径
     sasa_points: 92          # Shrake-Rupley 球面采样点数
 
   residence:
-    help: docs/MANUAL_ALGORITHMS.md
     mode: min
     cutoff: null             # 必填
     definition: both         # cont|inter|both
 
   transport:
-    help: docs/MANUAL_ALGORITHMS.md
-    require_velocity: true
-    remove_com: true
-    methods: [NE, GK]
     temperature: null        # K；NE/GK 需要（必需，故默认空）
     velocity_unit: A/ps      # dump 速度单位：A/ps | A/fs（LAMMPS units 不随文件传递）
 
   occupancy:
-    help: docs/MANUAL_ALGORITHMS.md
     zone: null               # 必填；语义 -zone x/y/z:min-max[,min-max][ ...]
                              # 支持多维度：如 "-zone z:0-10,10-20 x:0-5"
-                             # 后续 P2：以分子体积自动生成 zone
 
-  gyrate:
-    help: docs/MANUAL_ALGORITHMS.md
+  gyrate: {}
 
   contact:
-    help: docs/MANUAL_ALGORITHMS.md
     mode: min
     cutoff: null             # 必填
-
-  order:                     # P2：参考轴定义不确定，暂缓
-    help: docs/MANUAL_ALGORITHMS.md
-    axis: z

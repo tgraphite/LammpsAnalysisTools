@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include pyproject.toml
+
+# only the runtime package and its data ship in the sdist/wheel
+recursive-include src/lat/data *.yaml *.md
+
+# development material never ships
+prune tests
+prune docs
+prune config
+global-exclude __pycache__ *.py[cod] *.egg-info

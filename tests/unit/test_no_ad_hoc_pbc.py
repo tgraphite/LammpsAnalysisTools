@@ -4,7 +4,7 @@ Before 0.2.0 there were four parallel "periodic geometry" implementations in
 ``src/lat/modules`` and three modules silently treated wrapped coordinates as
 physical (SASA lost every neighbour across a face; contact/residence ``-mode
 center`` averaged wrapped coordinates; agg/cluster/pistack folded chains longer
-than half a box). See ``docs/07_decision_log.md`` §6.2.
+than half a box). See ``docs/CHANGELOG.md`` (0.2.0) and ``docs/MODULE_STATUS.md``.
 
 This test fails when a module goes back to hand-rolling PBC instead of calling
 :mod:`lat.core.periodic`.

@@ -43,16 +43,18 @@ def _ring_geometry(pos, box, topo, atoms_by_ring):
 class PiStack(Module):
     name = "pistack"
     summary = "pi-pi stacking count and per-pair geometry"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/pistack.md"
     inputs = ["-s", "-sel1", "-sel2"]
     outputs = ["<base>.pistack.out.csv", "<base>.pistack.pairs.out.csv"]
     params = [
         Param("sel1", flags=("-sel1",), required=True, help="ring atoms of group A"),
         Param("sel2", flags=("-sel2",), help="ring atoms of group B (default: self-stacking)"),
-        Param("distance", flags=("-distance",), config="modules.pistack.distance", type="float"),
-        Param("angle", flags=("-angle",), config="modules.pistack.angle", type="float"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("distance", flags=("-distance",), config="modules.pistack.distance", type="float",
+              help="ring-centre cutoff in Angstrom"),
+        Param("angle", flags=("-angle",), config="modules.pistack.angle", type="float",
+              help="maximum angle between ring normals in degrees"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel1, sel2, distance, angle, frame_range, stride):

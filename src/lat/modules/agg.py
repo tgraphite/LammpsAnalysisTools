@@ -21,19 +21,22 @@ def _sorted_types(keys):
 class Agg(Module):
     name = "agg"
     summary = "ion aggregation speciation (SSIP/CIP/AGG) from a residue graph"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/agg.md"
     inputs = ["-s", "-sel1", "-sel2", "-cutoff"]
     outputs = ["<base>.agg.out.csv", "<base>.agg.labels.out.csv", "<base>.agg.speciation.out.csv"]
     params = [
-        Param("sel1", flags=("-sel1",), required=True, help="center group (e.g. Li, type 2)"),
-        Param("sel2", flags=("-sel2",), required=True, help="counter group (e.g. FSI)",),
+        Param("sel1", flags=("-sel1",), required=True,
+              help="center group, e.g. 'type 2' for Li+"),
+        Param("sel2", flags=("-sel2",), required=True,
+              help="counter-ion group, e.g. 'type 5' for FSI-"),
         Param("cutoff", flags=("-cutoff",), config="modules.agg.cutoff", type="float",
-              required=True, help="required; no default"),
+              required=True, help="edge cutoff in Angstrom (required; no default)"),
         Param("mode", flags=("-mode",), config="modules.agg.mode", choices=("min", "center"),
-              help="edge criterion: min atom-atom or residue COM"),
-        Param("solv", flags=("-solv",), config="modules.agg.solv", help="optional solvent group"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+              help="edge criterion: min atom-atom distance or residue COM distance"),
+        Param("solv", flags=("-solv",), config="modules.agg.solv",
+              help="optional solvent group; adds the A_iB_jS_k table"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel1, sel2, cutoff, mode, solv, frame_range, stride):

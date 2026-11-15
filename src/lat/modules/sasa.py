@@ -25,16 +25,17 @@ from . import register
 class Sasa(Module):
     name = "sasa"
     summary = "solvent accessible surface area (Shrake-Rupley, PBC-aware)"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/sasa.md"
     inputs = ["-s", "-sel", "-radius", "-sasa_points"]
     outputs = ["<base>.sasa.out.csv"]
     params = [
-        Param("radius", flags=("-radius",), config="modules.sasa.radius", type="float"),
+        Param("radius", flags=("-radius",), config="modules.sasa.radius", type="float",
+              help="probe radius in Angstrom"),
         Param("sasa_points", flags=("-sasa_points",), config="modules.sasa.sasa_points",
-              type="int"),
+              type="int", help="sphere sample points per atom"),
         Param("sel", flags=("-sel",), help="atoms whose area is reported (surface uses all)"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, radius, sasa_points, sel, frame_range, stride):

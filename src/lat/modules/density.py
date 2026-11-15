@@ -23,18 +23,21 @@ _MASS_FACTOR = 1e27 / 6.02214076e23  # (g/mol)/A^3 -> kg/m^3
 class Density(Module):
     name = "density"
     summary = "density profile along an axis (1D) or in a plane (2D)"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/density.md"
     inputs = ["-s", "-sel", "-axis"]
     outputs = ["<base>.density.out.csv", "<base>.density.2d.out.csv"]
     params = [
-        Param("sel", flags=("-sel",), help="selection (default: all)"),
-        Param("axis", flags=("-axis",), config="modules.density.axis", choices=("x", "y", "z")),
-        Param("nbins", flags=("-nbins",), config="modules.density.nbins", type="int"),
-        Param("dim", flags=("-dim",), config="modules.density.dim", type="int", choices=(1, 2)),
+        Param("sel", flags=("-sel",), help="selection (default: all atoms)"),
+        Param("axis", flags=("-axis",), config="modules.density.axis", choices=("x", "y", "z"),
+              help="axis normal to the profile"),
+        Param("nbins", flags=("-nbins",), config="modules.density.nbins", type="int",
+              help="bins along the axis (bins per side in 2D)"),
+        Param("dim", flags=("-dim",), config="modules.density.dim", type="int", choices=(1, 2),
+              help="1 = profile along -axis, 2 = plane spanned by the other two axes"),
         Param("quantity", flags=("-quantity",), config="modules.density.quantity",
-              choices=("mass", "number")),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+              choices=("mass", "number"), help="mass density (kg/m^3) or number density (1/A^3)"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel, axis, nbins, dim, quantity, frame_range, stride):

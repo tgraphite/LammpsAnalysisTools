@@ -26,20 +26,23 @@ def _parse_fit_range(spec, n_lags):
 class MSD(Module):
     name = "msd"
     summary = "mean squared displacement and diffusion coefficient"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/msd.md"
     inputs = ["-s", "-sel"]
     outputs = ["<base>.msd.out.csv"]
     params = [
-        Param("sel", flags=("-sel",), required=True),
-        Param("dim", flags=("-dim",), config="modules.msd.dim", type="int", choices=(2, 3)),
+        Param("sel", flags=("-sel",), required=True, help="diffusing atoms or molecules"),
+        Param("dim", flags=("-dim",), config="modules.msd.dim", type="int", choices=(2, 3),
+              help="2D or 3D mean squared displacement"),
         Param("seltype", flags=("-seltype",), config="modules.msd.seltype",
               choices=("atom", "mol_com"), help="atom positions or per-molecule COM"),
-        Param("fit_range", flags=("-fit_range",), config="modules.msd.fit_range"),
+        Param("fit_range", flags=("-fit_range",), config="modules.msd.fit_range",
+              help="lag fit window start:stop (default: 10%-50% of lags)"),
         Param("remove_com", flags=("-remove_com",), config="modules.msd.remove_com",
-              type="flag", help="subtract the selection COM motion"),
-        Param("no_remove_com", flags=("-noremove_com",), type="flag"),
-        Param("stride", flags=("-stride",), type="int"),
-        Param("frame_range", flags=("-frame_range",)),
+              type="flag", help="subtract the selection COM motion (default: on)"),
+        Param("no_remove_com", flags=("-noremove_com",), type="flag",
+              help="keep the COM drift (overrides -remove_com)"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
     ]
 
     def run(self, ctx, *, sel, dim, fit_range, remove_com, no_remove_com, stride,

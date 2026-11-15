@@ -17,19 +17,20 @@ from . import register
 class Cluster(Module):
     name = "cluster"
     summary = "coordination-number distribution (and cluster sizes)"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/cluster.md"
     inputs = ["-s", "-sel1", "-sel2", "-cutoff"]
     outputs = ["<base>.cluster.cn.out.csv", "<base>.cluster.size.out.csv"]
     params = [
-        Param("sel1", flags=("-sel1",), required=True),
-        Param("sel2", flags=("-sel2",), required=True),
+        Param("sel1", flags=("-sel1",), required=True, help="center group"),
+        Param("sel2", flags=("-sel2",), required=True, help="counter or neighbour group"),
         Param("cutoff", flags=("-cutoff",), config="modules.cluster.cutoff", type="float",
-              required=True),
-        Param("mode", flags=("-mode",), config="modules.cluster.mode", choices=("min", "center")),
+              required=True, help="edge cutoff in Angstrom (required; no default)"),
+        Param("mode", flags=("-mode",), config="modules.cluster.mode", choices=("min", "center"),
+              help="edge criterion: min atom-atom distance or residue COM distance"),
         Param("focus", flags=("-focus",), config="modules.cluster.focus", type="flag",
-              help="skip graph, only per-center coordination numbers"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+              help="only per-center coordination numbers; skip cluster sizes"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel1, sel2, cutoff, mode, focus, frame_range, stride):

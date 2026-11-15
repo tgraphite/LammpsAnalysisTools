@@ -86,22 +86,25 @@ def _pore_centers(r_field, free, spacing):
 class FreeVol(Module):
     name = "freevol"
     summary = "probe-accessible free volume: FFV, PSD, free-space connectivity"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/freevol.md"
     inputs = ["-s", "-mode", "-radius", "-grid_dr", "-connectivity"]
     outputs = ["<base>.freevol.out.csv", "<base>.freevol.psd.out.csv",
                "<base>.freevol.connectivity.out.csv"]
     params = [
-        Param("radius", flags=("-radius",), config="modules.freevol.radius", type="float"),
-        Param("mode", flags=("-mode",), config="modules.freevol.mode", choices=MODES),
-        Param("grid_dr", flags=("-grid_dr",), config="modules.freevol.grid_dr", type="float"),
+        Param("radius", flags=("-radius",), config="modules.freevol.radius", type="float",
+              help="probe radius in Angstrom"),
+        Param("mode", flags=("-mode",), config="modules.freevol.mode", choices=MODES,
+              help="ffv = free volume fraction; psd = pore size; connectivity = free-space graph"),
+        Param("grid_dr", flags=("-grid_dr",), config="modules.freevol.grid_dr", type="float",
+              help="requested voxel edge in Angstrom (may be coarsened)"),
         Param("connectivity", flags=("-connectivity",), config="modules.freevol.connectivity",
               type="int", help="6 = faces, 26 = faces+edges+corners"),
         Param("psd_rmax", flags=("-psd_rmax",), config="modules.freevol.psd_rmax", type="float",
               help="upper PSD radius (A); default: data-driven"),
         Param("components", flags=("-components",), config="modules.freevol.components",
               type="flag", help="also write the per-component connectivity table"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, radius, mode, grid_dr, connectivity, psd_rmax, components,

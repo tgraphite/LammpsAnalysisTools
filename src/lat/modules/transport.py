@@ -31,18 +31,19 @@ def _msd_slope(traj):
 class Transport(Module):
     name = "transport"
     summary = "diffusion, Nernst-Einstein and Green-Kubo transport"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/transport.md"
     inputs = ["-s", "-sel"]
     outputs = ["<base>.transport.d.out.csv", "<base>.transport.ne.out.csv",
                "<base>.transport.gk.out.csv"]
     params = [
-        Param("sel", flags=("-sel",), required=True),
+        Param("sel", flags=("-sel",), required=True, help="charged species to analyse"),
         Param("temperature", flags=("-temperature",), config="modules.transport.temperature",
-              type="float"),
+              type="float", help="temperature in K; required for NE/GK"),
         Param("velocity_unit", flags=("-velocity_unit",),
-              config="modules.transport.velocity_unit"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+              config="modules.transport.velocity_unit",
+              help="trajectory velocity unit: A/ps or A/fs"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel, temperature, velocity_unit, frame_range, stride):

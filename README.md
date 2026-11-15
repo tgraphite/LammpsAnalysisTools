@@ -1,127 +1,198 @@
 # lat — LAMMPS Analysis Tool
 
-> 面向 LAMMPS `data` / `lammpstrj` 的统一后处理工具。
-> 命令风格对齐 GROMACS（`-s` 别名 topo、`-f` 别名 traj，单横线，无 `--topo`），
-> 但语义、输出契约与文档体系完全自有。
+[![PyPI](https://img.shields.io/pypi/v/lammps-analysis-tools.svg)](https://pypi.org/project/lammps-analysis-tools/)
+[![Python](https://img.shields.io/pypi/pyversions/lammps-analysis-tools.svg)](https://pypi.org/project/lammps-analysis-tools/)
 
-## 一句话定位
+面向 LAMMPS `data` / `lammpstrj` 的轨迹分析工具。命令风格对齐 GROMACS（`-s` 拓扑、`-f` 轨迹、单横线参数），
+输出统一为带审计头的 CSV，适合脚本批处理、回归与作图。
 
-把「分子动力学后处理」中高频、可复用、可自动化的分析，收敛成一组**边界清晰、自解释、可回归**的子命令，
-让小白与 AI 都能 `lat <module> -h` 秒上手，让工程师只关心「选哪组原子、用什么判据」。
+## 特性
 
-## 主旨（不可动摇的四条）
+- **直接读 LAMMPS**：`*.data` / `*.lmp` + `*.lammpstrj`，自动识别 `atom_style`，按质量推断元素。
+- **GROMACS 兼容输入**：`.tpr/.gro/.pdb` + `.xtc/.trr/.gro` 可直接分析，便于交叉验证。
+- **周期几何一致性**：所有距离、质心、整分子复原、网格与曲面都走同一套最小镜像实现。
+- **可复现输出**：文件名即意图；CSV 头记录命令、选择、参数、警告与标量；同名输出自动备份。
+- **自解释**：`lat --help` 列出模块，`lat <module> -h` 给出参数与默认值，`lat describe -module <name>` 给出完整契约。
 
-1. **完全兼容** LAMMPS 的 `data` / `lammpstrj`，并通过 GROMACS Ground Truth 做两级回归。
-2. **自解释**：`lat -h` / `lat <module> -h` 输出用法、参数、默认值与手册入口；原理与判读见
-   《算法原理手册》《测试人员手册》——文档即教材。
-3. **数据与逻辑分离**：所有默认值、单位、输出模板、模块文档集中在唯一 `config/lat.yaml`；
-   代码中**不得**存在任何 backup 默认值，配置错误直接崩溃是预期行为。
-4. **格式无关的 IO**：内部基于 MDAnalysis 读取器，可直接吃 GROMACS 轨迹（**不对外暴露**，仅用于回归与内部复用）。
+## 安装
 
-## 不在职责内（交给专门工具）
+需要 Python ≥ 3.9。
 
-固体/金属力学（应力应变、位错、DXA、压痕、切削）、相互作用能/自由能、SDF 图、谱（VDOS/SAXS）、
-反应网络、对接、PMF/WHAM、量子/介观。这些要么属于 LAMMPS on-the-fly，要么属于 OVITO/Zeo++ 等专用工具。
+    pip install lammps-analysis-tools
 
-## 安装（一键，新设备可用）
+安装后命令是 `lat`：
 
-```bash
-cd lat && bash install.sh        # 建独立环境、装依赖、把 lat 放到 ~/.local/bin
-export PATH="$HOME/.local/bin:$PATH"
-lat --version                    # lat 0.1.0
-```
+    lat --version
+    lat --help
 
-无需 root、无需 `source`/激活、无需在源码目录下运行。系统 Python < 3.9 时安装脚本会自动用
-`uv` 装一个私有 Python 3.11。环境变量：`LAT_CONFIG`（自定义配置）、`LAT_VENV`、`LAT_BIN`、`PYTHON`。
+升级：
 
-## 目录结构
+    pip install --upgrade lammps-analysis-tools
 
-```
-lat/
-├── README.md                 本文件
-├── install.sh                一键安装脚本
-├── config/
-│   └── lat.yaml              唯一配置来源（默认值/单位/文档/输出模板）
-├── docs/
-│   ├── 00_provenance.md      来龙去脉与决策记录
-│   ├── 01_meta_requirements.md 元要求（M1–M15）与范围
-│   ├── 02_architecture.md    系统架构
-│   ├── 03_io_selection.md    IO、拓扑、选择器、PBC、单位
-│   ├── 04_output_contract.md 输出契约
-│   ├── 05_regression.md      回归测试方案
-│   ├── 06_reference.md       参考代码与权威来源
-│   ├── 07_decision_log.md    已确认决策与优先级
-│   ├── 08_handoff.md         compact 后的恢复/交接笔记（先读它）
-│   ├── MANUAL_TESTER.md      **测试人员手册**（安装/逐模块操作/判读/排错）
-│   ├── MANUAL_ALGORITHMS.md  **算法原理手册**（教材式，逐模块原理与精度）
-│   ├── 09_test_campaign.md   测试战役报告（静态分析/幂等/文档/真实项目）
-│   ├── 10_refdata_campaign.md 第三方 RefData 订单 + gmx 原生回归
-│   ├── 11_examples_recheck.md 0.2.0 对已有项目产物的复跑/覆盖报告
-│   ├── 12_0.2.0_release.md   0.2.0 发布说明（行为变更清单 + 验收）
-│   ├── data/                 产物级归档（0.2.0_examples_mapping.tsv 等）
-│   ├── figures/0.2.0/        修复前后对比图（16 张，见 11 号文档 §6）
-│   └── BYPASS.md             旁路记录：讨论过但暂不纳入的功能及理由（非 roadmap）
-├── src/lat/                  实现（P0 起逐步填充）
-│   ├── core/                  IO/拓扑/选择/PBC/网格/相关/输出
-│   ├── modules/               各子命令
-│   └── plotting/              plot1d / plot2d
-└── tests/
-    ├── regression/
-    │   ├── convert/          自研 gmx→lammps 转换器 + 校验（无需 InterMol/VMD）
-    │   ├── examples_recheck/ 复跑/覆盖/对比图工具（行为变更后重算已有产物）
-    │   ├── samples/          已落盘自包含回归样例（sys1_reduced）
-    │   ├── level1_algo/      原生 gmx → 算法回归
-    │   └── level2_format/    转换后 → 格式回归
-    └── data/                 小型自造测试体系
-```
+从源码或离线安装：
 
-## 当前状态
+    git clone https://github.com/tgraphite/LammpsAnalysisTools.git
+    cd LammpsAnalysisTools
+    bash install.sh
+    export PATH="$HOME/.local/bin:$PATH"
 
-**全部 P0 模块已实现**。`lat <module> -s <data> [-f <traj>]` 可运行：
+`install.sh` 会建独立虚拟环境、安装依赖，并把 `lat` 放到 `~/.local/bin`；系统 Python < 3.9 时会用
+`uv` 引导一个私有 Python 3.11。也可以直接 `pip install .`。
 
-```
-core    io / topology / selection / pbc / neighbor / grid / correlate / output / context / config
-模块    rdf density hbond rms msd agg cluster pistack freevol sasa residence
-        transport occupancy gyrate contact select describe
-绘图    plot1d plot2d
-```
+依赖：numpy、scipy、pyyaml、matplotlib、MDAnalysis、ase。
 
-回归：`pytest tests` **161 passed / 5 skipped**（含 level2；level1 逐值对拍为独立脚本，需本机 gmx）。四级证据：
-- **单元/合成**（PBC、密度、MSD、RMSD、手算氢键/SSIP-CIP-AGG/ππ、FFV、滞留、占据、输运守卫，
-  **键表 id 重排**）；
-- **E2E 冒烟**（真实 6600 原子样例逐模块跑通）；
-- **level1 对拍 gmx（GROMACS 原生输入）**（sys1–6 含 PMBA 聚合物：RDF/CN 相对误差 ≤0.2%，
-  密度 <1%，MSD ~5%）；
-- **level1 对拍 gmx（LAMMPS 输入，2026-10 新增）**：`convert/lammps_to_gmx.py` +
-  `level1_algo/gmx_ref_lammps.py`，在 4 链 PET（6200 原子 / 501 帧）上逐帧比
-  gyrate / rms / rmsf / sasa / rdf / hbond。结果：Rg 3e-4 Å、RMSD 1e-4 Å、RMSF 7e-4 Å、
-  RDF 配位数 0.26%、hbond 0.21%（详见 `tests/regression/level1_algo/README.md`）。
+## 快速开始
 
-**0.2.0 修掉的四个缺陷**（都会改数值，`docs/12_0.2.0_release.md` 是完整清单）：
-1. `Bonds` 段写的是 **atom id** 而非 Atoms 段行号，Atoms 不按 id 排序时键图错乱 →
-   `gyrate`/`rms`/`hbond` 静默出错（OVITO 写的 PET：Rg 高估 3.6×）；
-2. `hbond` 把每一个 C–H 当给体 → 计数虚高（PET 体系 41.7 vs gmx 4.3/帧）；
-3. `sasa` 未用 PBC → 系统性高估 +14.2%（`gmx sasa` 对拍）；
-4. PSD 的 bin 宽/归一化/周期距离变换、connectivity 的环面与邻接全部重做。
+    # 径向分布函数 + 配位数
+    lat rdf -s system.data -f run.lammpstrj -sel1 "type 2" -sel2 "type 5" -cutoff 10 -o out
 
-同时把 `probe`（体素网格 + 曲面混在一起）拆成 **`lat freevol`**（ffv/psd/connectivity）
-与 **`lat sasa`**（Shrake–Rupley）；`probe` 已删除，不留兼容壳。
-所有周期几何统一到 `lat.core.periodic`，并由 `tests/unit/test_no_ad_hoc_pbc.py` 守卫。
-尚待：`current` 与 gmx 逐值对拍；P1 审计。
+    # 沿 z 的密度剖面
+    lat density -s system.data -f run.lammpstrj -axis z -nbins 200 -o out
 
-命令示例：
-```
-./lat select -s sys.data -sel "type 2"
-./lat rdf -s sys.data -f sys.lammpstrj -sel1 "type 2" -sel2 "type 5" -cutoff 10 -o out/sys
-./lat plot1d out/sys.rdf.out.csv
-```
+    # 均方位移与扩散系数
+    lat msd -s system.data -f run.lammpstrj -sel "type 2" -o out
 
-剩余 P0 收尾（`current`、P1 审计）按 `docs/08_handoff.md` 的顺序继续。
-P1 = 待 P0 验收后开发；P2 = 关键点验证后再开发（当前 `order`、`occupancy` 的分子体积自动 zone）。
+    # 画图（输入是上一步的 CSV）
+    lat plot1d -f out.rdf.out.csv -o rdf.png
 
-## 快速约定
+结果写入当前目录或 `-o` 指定的基名：
 
-- 时间 = **帧号**，LAMMPS 时间字段一律忽略；寿命/滞留时间均以「帧」为单位输出，
-  并在 header 注明「= k × 帧间距」。
-- 不做任何分子/残基推断；计算目标必须由用户在运行前用静态 MDAnalysis 语义或 `ndx` 明确给出。
-- 无交互式输入（保证幂等）。
+    out.rdf.out.csv
+    out.rdf.cn.out.csv
+
+## 支持输入
+
+| | 拓扑 | 轨迹 |
+|---|---|---|
+| LAMMPS（首选） | `.data` / `.lmp`：Masses、Atoms；含 Bonds 才能做氢键/整分子分析 | `.lammpstrj`（dump） |
+| GROMACS | `.tpr` / `.gro` / `.pdb` | `.xtc` / `.trr` / `.gro` |
+
+- 自动识别 `atomic`、`charge`、`molecular`、`full`，支持 `full/kk` 等加速器后缀；六列歧义时用 `-style`。
+- 类型→元素默认按质量 ±0.2% 匹配；不确定时用 `-types` 显式指定，或让 dump 带 `element` 列。
+- 坐标支持 `x/y/z`、`xu/yu/zu`、`xs/ys/zs`、`xsu/ysu/zsu`；带 `ix/iy/iz` 可解包。
+- 反应轨迹原子数逐帧变化时会报错，并提示用 `-frame_range` / `-stride` 限定到一致窗口。
+
+## 模块总览
+
+| 模块 | 用途 | 手册 |
+|---|---|---|
+| `rdf` | 径向分布函数 g(r) 与配位数 | [rdf](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/rdf.md) |
+| `density` | 一维/二维密度剖面 | [density](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/density.md) |
+| `msd` | 均方位移与扩散系数 | [msd](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/msd.md) |
+| `gyrate` | 回转半径 Rg | [gyrate](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/gyrate.md) |
+| `rms` | RMSD / RMSF | [rms](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/rms.md) |
+| `contact` | 两组间接触数与距离 | [contact](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/contact.md) |
+| `hbond` | 氢键数量、寿命与空间分布 | [hbond](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/hbond.md) |
+| `agg` | SSIP / CIP / AGG 离子聚合形态 | [agg](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/agg.md) |
+| `cluster` | 配位数与团簇尺寸分布 | [cluster](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/cluster.md) |
+| `pistack` | π–π 堆积 | [pistack](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/pistack.md) |
+| `freevol` | 自由体积、孔径分布、连通性 | [freevol](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/freevol.md) |
+| `sasa` | 溶剂可及表面积 | [sasa](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/sasa.md) |
+| `residence` | 配体滞留时间 | [residence](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/residence.md) |
+| `transport` | 扩散、Nernst–Einstein、Green–Kubo | [transport](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/transport.md) |
+| `occupancy` | 区域占据、穿越、首次通过 | [occupancy](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/occupancy.md) |
+| `select` | 检查选择、导出 .ndx | [select](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/select.md) |
+| `describe` | 模块清单与契约 | [describe](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/describe.md) |
+| `plot1d` | 一维 CSV 绘图 | [plot1d](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/plot1d.md) |
+| `plot2d` | 二维 CSV 绘图 | [plot2d](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/plot2d.md) |
+
+完整手册（公共参数、输入、选择语法、输出契约）：[docs/manual](https://github.com/tgraphite/LammpsAnalysisTools/tree/main/docs/manual)。
+
+## 公共参数
+
+| 参数 | 说明 |
+|---|---|
+| `-s, -topo` | 拓扑文件（分析模块必填） |
+| `-f, -traj` | 轨迹文件 |
+| `-o` | 输出基名；缺省用拓扑文件名 |
+| `-unit` | 长度单位：`real`、`metal`、`lj`；缺省用配置 |
+| `-style` | 强制 LAMMPS `atom_style` |
+| `-types` | type→元素映射文件，每行 `type element` |
+| `-index, -n` | GROMACS `.ndx`，为选择提供命名组 |
+| `-frame_range` | 帧窗口 `start:stop[:stride]`，stop 不含 |
+| `-stride` | 每隔多少帧取一帧 |
+| `-v` | 显示 INFO 进度 |
+| `-debug` | 额外写 JSON 审计 |
+| `-h` | 模块帮助（含默认值） |
+| `-V, --version` | 版本号 |
+
+PBC 始终开启，所有距离使用最小镜像。时间轴是帧号，不解析文件中的物理时间。
+
+## 选择语法
+
+MDAnalysis 风格子集，支持 `and`、`or`、`not` 与括号；相邻关键字隐含 `and`。
+
+| 关键字 | 含义 | LAMMPS | GROMACS |
+|---|---|---|---|
+| `all` | 全部原子 | 是 | 是 |
+| `type` | 原子类型 | 是 | 是 |
+| `element` | 元素符号 | 是（需推断或 `-types`） | 是 |
+| `mol` | 分子 ID | 是（需分子信息） | 是 |
+| `id` | 原子 id | 是 | 是 |
+| `index` | 0-based 原子序号 | 是 | 是 |
+| `name` | 原子名 | 否 | 是 |
+| `resname` | 残基名 | 否 | 是 |
+| `resid` | 残基号 | 否 | 是 |
+
+    -sel "type 2"
+    -sel "type 2 or type 5"
+    -sel1 "resname LI" -sel2 "resname FSI"
+    -sel "all and not type 1"
+
+单选择模块用 `-sel`；双选择模块用 `-sel1`/`-sel2`。先运行 `lat select` 验证命中。
+
+## 输出
+
+- 结果全部写入 CSV；stdout 为空，进度/警告/错误走 stderr。
+- 文件名：`<basename>.<tag>[.<mode>].out.csv`。
+- 文件头以 `#` 开头，包含 program、module、command、selections、definitions、frame_range、
+  scalars、warning、title、xlabel、ylabel、columns，最后是 `# --- data ---`。
+- 标量（首壳配位数、D、R²、寿命、积分等）在 `# scalars:` 行，分号分隔。
+- 同名文件先备份为 `.bak.1`、`.bak.2`……，不会静默覆盖。
+- 退出码：0 成功，1 参数/输入/计算错误，130 中断；警告不改变退出码。
+
+## 绘图
+
+`plot1d` / `plot2d` 只读 CSV，计算与绘图解耦。
+
+    lat plot1d -f out.rdf.out.csv -o rdf.png
+    lat plot1d -f out.agg.labels.out.csv -columns A_SSIP,A_CIP,A_AGG -o spec.png
+    lat plot1d -f out.agg.labels.out.csv -stack -o spec_stack.png
+    lat plot2d -f out.density.2d.out.csv -o density2d.png
+
+`-smooth`（`none`/`gaussian`/`savgol`）只在绘图阶段生效，CSV 始终是原始值；
+`-bar` 与 `-stack` 互斥，且不做平滑。
+
+## 配置
+
+默认值来自 `lat.yaml`：源码树是 `config/lat.yaml`，安装后是包内 `data/lat.yaml`。
+命令行覆盖配置。
+
+| 环境变量 | 作用 |
+|---|---|
+| `LAT_CONFIG` | 使用自定义配置文件 |
+| `LAT_VENV` | `install.sh` 创建的虚拟环境路径 |
+| `LAT_BIN` | `install.sh` 放置 `lat` 的目录 |
+| `PYTHON` | `install.sh` 使用的解释器 |
+
+## 文档
+
+- 逐模块手册：[docs/manual](https://github.com/tgraphite/LammpsAnalysisTools/tree/main/docs/manual)
+- 公共参数与输出契约：[common.md](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/manual/common.md)
+- 版本变更：[CHANGELOG.md](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/docs/CHANGELOG.md)
+
+## 常见问题
+
+**选择命中 0 个原子？** 用 `lat select` 检查表达式；LAMMPS 拓扑通常没有 `resname`/`name`。
+
+**元素推断失败？** 补 `Masses`，或让 dump 带 `element` 列，或用 `-types`。
+
+**氢键报 “no donor”？** 给体只认 N/O/F/S/Cl/Br/I 上的 H；C–H 不是给体。
+
+**MSD 提示没有 image flags？** 轨迹只有 wrapped 坐标，MSD 可能饱和；改用带 `xu/yu/zu` 或 `ix/iy/iz` 的 dump。
+
+**freevol 报三斜盒？** 体素网格只支持正交且固定的盒子；改用分子/原子对分析或正交化盒子。
+
+## 许可
+
+Proprietary。详见 [LICENSE](https://github.com/tgraphite/LammpsAnalysisTools/blob/main/LICENSE)。

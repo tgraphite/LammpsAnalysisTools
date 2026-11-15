@@ -24,8 +24,8 @@ Why this exists
 ---------------
 Before 0.2.0 there were four parallel "periodic geometry" implementations in
 the tree, only two of them principled, and three modules silently assumed
-wrapped coordinates were physical. See ``docs/07_decision_log.md`` §6.2 and
-``docs/MANUAL_ALGORITHMS.md`` §0.3.
+wrapped coordinates were physical. See ``docs/CHANGELOG.md`` (0.2.0) and
+``docs/MODULE_STATUS.md`` (fixed behaviour baseline).
 
 Grid layer convention
 ---------------------
@@ -275,7 +275,7 @@ def residue_com(pos, box, topo, indices, masses=None, what="selection"):
     Returns ``(com, warning)``. The centre is exact when the selection is a
     union of whole molecules whose bond graph can be unwrapped. Otherwise the
     naive wrapped / first-atom centre is used and a WARN explains why (gmx
-    refuses both cases -- see docs/11_examples_recheck.md).
+    refuses both cases -- see docs/MODULE_STATUS.md).
     """
     idx = np.asarray(indices, dtype=int)
     if len(idx) == 0:

@@ -24,17 +24,18 @@ def _kabsch(mobile, ref):
 class RMS(Module):
     name = "rms"
     summary = "RMSD vs a reference frame and per-atom RMSF"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/rms.md"
     inputs = ["-s", "-sel"]
     outputs = ["<base>.rmsd.out.csv", "<base>.rmsf.out.csv"]
     params = [
-        Param("sel", flags=("-sel",), required=True),
+        Param("sel", flags=("-sel",), required=True, help="atoms used for RMSD/RMSF"),
         Param("fit", flags=("-fit",), help="atoms used for alignment (default: -sel)"),
-        Param("ref", flags=("-ref",), config="modules.rms.ref", help="first | average | frame index"),
+        Param("ref", flags=("-ref",), config="modules.rms.ref",
+              help="first, average, or an explicit frame index"),
         Param("rmsf", flags=("-rmsf",), config="modules.rms.rmsf", type="flag",
               help="also write per-atom RMSF"),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel, fit, ref, rmsf, frame_range, stride):

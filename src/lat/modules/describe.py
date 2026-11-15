@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from ..config import program_root
+from ..config import manual_path
 from .base import Module, Param
 from . import all_modules, get, register
 
@@ -13,6 +11,7 @@ from . import all_modules, get, register
 class Describe(Module):
     name = "describe"
     summary = "list available modules or describe one"
+    help_doc = "manual/describe.md"
     inputs = ["-module"]
     screen_only = True
     requires_topology = False
@@ -37,7 +36,7 @@ class Describe(Module):
             flags = ", ".join(p.flags) or p.name
             origin = f"config:{p.config}" if p.config else ("required" if p.required else "optional")
             print(f"  {flags:<16} {origin:<24} {p.help}")
-        doc = Path(program_root()) / "docs" / cls.help_doc if cls.help_doc else None
-        if doc and doc.is_file():
+        doc = manual_path(cls.help_doc)
+        if doc is not None:
             print(f"\nsee: {doc}")
         return []

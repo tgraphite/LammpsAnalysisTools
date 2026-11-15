@@ -1,0 +1,9 @@
+# Hide development-only material from git archive / GitHub source releases.
+/tests export-ignore
+/config export-ignore
+/lat export-ignore
+/MANIFEST.in export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+/docs/CHANGELOG.md export-ignore
+/docs/MODULE_STATUS.md export-ignore

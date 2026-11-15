@@ -70,15 +70,16 @@ def _labels(pos, axes, per_axis, n_zones):
 class Occupancy(Module):
     name = "occupancy"
     summary = "zone occupancy, boundary crossings and first-passage times"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/occupancy.md"
     inputs = ["-s", "-sel", "-zone"]
     outputs = ["<base>.occupancy.out.csv", "<base>.occupancy.crossings.out.csv",
                "<base>.occupancy.first_passage.out.csv", "<base>.occupancy.enrichment.out.csv"]
     params = [
-        Param("sel", flags=("-sel",), required=True),
-        Param("zone", flags=("-zone",), config="modules.occupancy.zone", required=True),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("sel", flags=("-sel",), required=True, help="atoms or molecules to track"),
+        Param("zone", flags=("-zone",), config="modules.occupancy.zone", required=True,
+              help="axis:min-max[,min-max] ... (half-open intervals; space-separated axes)"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel, zone, frame_range, stride):

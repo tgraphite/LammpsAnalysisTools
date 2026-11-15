@@ -46,16 +46,18 @@ def _first_shell_min(r, g):
 class RDF(Module):
     name = "rdf"
     summary = "radial distribution function g(r) and coordination number"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/rdf.md"
     inputs = ["-s", "-sel1", "-sel2"]
     outputs = ["<base>.rdf.out.csv", "<base>.rdf.cn.out.csv"]
     params = [
-        Param("sel1", flags=("-sel1",), required=True, help="first selection"),
-        Param("sel2", flags=("-sel2",), required=True, help="second selection"),
-        Param("nbins", flags=("-nbins",), config="modules.rdf.nbins", type="int"),
-        Param("cutoff", flags=("-cutoff",), config="modules.rdf.cutoff", type="float"),
-        Param("frame_range", flags=("-frame_range",), help="start:stop[:stride]"),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("sel1", flags=("-sel1",), required=True, help="first selection (A)"),
+        Param("sel2", flags=("-sel2",), required=True, help="second selection (B)"),
+        Param("nbins", flags=("-nbins",), config="modules.rdf.nbins", type="int",
+              help="number of radial bins"),
+        Param("cutoff", flags=("-cutoff",), config="modules.rdf.cutoff", type="float",
+              help="maximum radius in Angstrom (keep below half the box edge)"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
         Param("intramol", flags=("-intramol",), config="modules.rdf.intramolecular",
               type="flag", help="include intramolecular (same-molecule) pairs; default: excluded"),
     ]

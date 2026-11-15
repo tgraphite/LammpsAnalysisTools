@@ -1,4 +1,4 @@
-"""Compatibility fixes found by the real-project campaign (tests/compat)."""
+"""I/O compatibility fixes found on real project files."""
 
 import numpy as np
 import pytest

@@ -14,14 +14,14 @@ from . import register
 class Select(Module):
     name = "select"
     summary = "inspect a selection and/or export it to a GROMACS .ndx"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/select.md"
     inputs = ["-s", "-sel", "-export-ndx", "-name"]
-    outputs = [".ndx (optional)"]
+    outputs = ["<name>.ndx (optional)"]
     screen_only = True
     params = [
-        Param("sel", flags=("-sel",), help="selection expression"),
-        Param("export_ndx", flags=("-export-ndx",), help="write selection to this .ndx"),
-        Param("name", flags=("-name",), help="group name in the exported ndx"),
+        Param("sel", flags=("-sel",), help="selection expression (omit to list all types)"),
+        Param("export_ndx", flags=("-export-ndx",), help="write the selection to this .ndx"),
+        Param("name", flags=("-name",), help="group name in the exported .ndx"),
     ]
 
     def run(self, ctx, *, sel, export_ndx, name):

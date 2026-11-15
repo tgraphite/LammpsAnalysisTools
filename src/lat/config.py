@@ -5,6 +5,9 @@ Rules (M11 + decision 18):
   * the codebase must not carry fallback defaults for physical parameters;
     a missing key is an ERROR;
   * CLI arguments override the config.
+
+The packaged copy (lat/data/lat.yaml) mirrors the source checkout copy so
+that a pip install behaves exactly like a source run.
 """
 
 from __future__ import annotations
@@ -21,7 +24,7 @@ _MISSING = object()
 
 # src/lat/config.py -> src/lat -> src -> <program root>  (source checkout)
 _PROGRAM_ROOT = Path(__file__).resolve().parents[2]
-# config bundled inside the installed package (for `pip install` on a new device)
+# config bundled inside the installed package (for pip install on a new device)
 _PACKAGE_DATA = Path(__file__).resolve().parent / "data" / "lat.yaml"
 _SOURCE_CONFIG = _PROGRAM_ROOT / "config" / "lat.yaml"
 
@@ -41,6 +44,25 @@ def config_path() -> Path:
     if _SOURCE_CONFIG.is_file():
         return _SOURCE_CONFIG
     return _PACKAGE_DATA
+
+
+def manual_dir() -> Path:
+    """Directory holding the per-module help manuals.
+
+    Source checkouts use docs/manual; an installed wheel falls back to the
+    copy bundled as package data, so lat describe works in both cases.
+    """
+    source = _PROGRAM_ROOT / "docs" / "manual"
+    if source.is_dir():
+        return source
+    return _PACKAGE_DATA.parent / "manual"
+
+
+def manual_path(name: str) -> Path | None:
+    if not name:
+        return None
+    path = manual_dir() / Path(name).name
+    return path if path.is_file() else None
 
 
 class Config:

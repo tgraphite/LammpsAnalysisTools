@@ -16,13 +16,14 @@ from . import register
 class Gyrate(Module):
     name = "gyrate"
     summary = "radius of gyration Rg per frame"
-    help_doc = "MANUAL_ALGORITHMS.md"
+    help_doc = "manual/gyrate.md"
     inputs = ["-s", "-sel"]
     outputs = ["<base>.gyrate.out.csv"]
     params = [
-        Param("sel", flags=("-sel",), required=True),
-        Param("frame_range", flags=("-frame_range",)),
-        Param("stride", flags=("-stride",), type="int"),
+        Param("sel", flags=("-sel",), required=True,
+              help="atoms making up the molecule/chain (use one molecule per run)"),
+        Param("frame_range", flags=("-frame_range",), help="frame window start:stop[:stride]"),
+        Param("stride", flags=("-stride",), type="int", help="sample every N frames (default: 1)"),
     ]
 
     def run(self, ctx, *, sel, frame_range, stride):

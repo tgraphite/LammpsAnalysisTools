@@ -24,24 +24,32 @@ def _type_of(type_name):
 
 
 def build_parser(cls, cfg=None) -> argparse.ArgumentParser:
-    epilog = (f"manual: docs/MANUAL_ALGORITHMS.md  |  `lat describe -module {cls.name}` "
-              "for parameters; defaults come from the lat config")
+    epilog = (f"manual: docs/{cls.help_doc or 'manual/index.md'}  |  "
+              f"`lat describe -module {cls.name}` for the full contract; "
+              "defaults come from the lat config")
     parser = argparse.ArgumentParser(
         prog=f"lat {cls.name}", description=cls.summary, epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter, add_help=True
     )
     if getattr(cls, "requires_topology", True):
-        parser.add_argument("-s", "-topo", dest="topo", required=True, help="LAMMPS data file")
-        parser.add_argument("-f", "-traj", dest="traj", help="LAMMPS dump / GROMACS traj")
-        parser.add_argument("-o", dest="output", help="output basename")
-        parser.add_argument("-unit", dest="unit", help="length unit (default: real/Angstrom)")
-        parser.add_argument("-style", dest="style", help="force atom_style")
-        parser.add_argument("-types", dest="types", help="explicit type->element file")
-        parser.add_argument("-index", "-n", dest="index", help="GROMACS .ndx with named groups")
-        parser.add_argument("-pbc", dest="pbc", action="store_true", default=None)
-        parser.add_argument("-nopbc", dest="nopbc", action="store_true")
-        parser.add_argument("-debug", dest="debug", action="store_true")
-        parser.add_argument("-v", dest="verbose", action="store_true")
+        parser.add_argument("-s", "-topo", dest="topo", required=True,
+                            help="topology: LAMMPS .data/.lmp (or GROMACS .tpr/.gro/.pdb)")
+        parser.add_argument("-f", "-traj", dest="traj",
+                            help="trajectory: LAMMPS .lammpstrj (or GROMACS .xtc/.trr/.gro)")
+        parser.add_argument("-o", dest="output",
+                            help="output basename (default: topology file stem)")
+        parser.add_argument("-unit", dest="unit",
+                            help="length unit: real|metal|lj (default: config io.default_unit)")
+        parser.add_argument("-style", dest="style",
+                            help="force the LAMMPS atom_style when the Atoms header is ambiguous")
+        parser.add_argument("-types", dest="types",
+                            help="explicit type->element file (one 'type element' pair per line)")
+        parser.add_argument("-index", "-n", dest="index",
+                            help="GROMACS .ndx file providing named groups for selections")
+        parser.add_argument("-debug", dest="debug", action="store_true",
+                            help="also write a JSON audit next to the CSV")
+        parser.add_argument("-v", dest="verbose", action="store_true",
+                            help="show INFO progress on stderr")
     for p in cls.params:
         help_text = p.help
         if p.config and cfg is not None:

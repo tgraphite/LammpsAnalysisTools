@@ -41,4 +41,4 @@ lat（LAMMPS Analysis Tool）把分子动力学后处理中高频、可复用的
 
 ## 版本
 
-当前版本 1.0.0。变更记录见 [../CHANGELOG.md](../CHANGELOG.md)。
+当前版本 1.1.0。变更记录见 [../CHANGELOG.md](../CHANGELOG.md)。更新检查（--check-update / --no-update-check）见 [common.md](common.md#更新检查)。

@@ -27,6 +27,8 @@
 | -debug | 额外写一份 JSON 审计文件 |
 | -h | 显示该模块的完整帮助（含默认值） |
 | -V, --version | 显示版本号 |
+| --check-update | 立即检查更新并退出（不运行模块） |
+| --no-update-check | 本次运行跳过自动更新提示 |
 
 注意：PBC 默认开启且不可关闭；lat 的所有距离都是最小镜像距离。
 
@@ -92,6 +94,22 @@ MDAnalysis 风格子集，支持 and、or、not 与括号；相邻关键字隐�
 | LAT_VENV | install.sh 创建的虚拟环境路径（默认 <repo>/.venv） |
 | LAT_BIN | install.sh 放置 lat 启动器的目录（默认 ~/.local/bin） |
 | PYTHON | install.sh 使用的解释器 |
+| LAT_NO_UPDATE_CHECK | 设为 1 关闭自动更新检查 |
+| LAT_UPDATE_URL | 自定义 JSON 版本端点 |
+| LAT_UPDATE_INDEX | 自定义 PEP 503 简单索引 |
+| LAT_UPDATE_INTERVAL_HOURS | 覆盖检查间隔（默认 24） |
+| LAT_UPDATE_TIMEOUT_S | 覆盖单源超时（默认 1.5 秒） |
+
+## 更新检查
+
+lat 在交互终端启动时最多每 24 小时检查一次新版本：
+
+- 只读缓存并在 stderr 打印一行提示；检查在后台线程执行，不阻塞命令。
+- 同时查询 PyPI、PIP_INDEX_URL、LAT_UPDATE_URL / LAT_UPDATE_INDEX，取最高版本。
+- 缓存：`$XDG_CACHE_HOME/lat/update.json`；离线或超时只写缓存，不报错。
+- 非交互终端、CI、--version、-h、describe 自动跳过。
+- 手工检查：`lat --check-update`；关闭：`LAT_NO_UPDATE_CHECK=1`。
+- **不会自动安装或执行任何更新**；升级由用户通过 pip/uv 完成。
 
 ## 常见错误
 

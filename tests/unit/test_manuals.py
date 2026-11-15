@@ -125,7 +125,7 @@ def test_module_status_and_changelog_cover_the_release(modules):
     changelog = (REPO / "docs" / "CHANGELOG.md").read_text()
     missing = [name for name in modules if f"| {name} |" not in status]
     assert not missing, f"MODULE_STATUS.md does not list: {missing}"
-    assert "## [1.0.0]" in changelog
+    assert f"## [{__version__}]" in changelog
     assert f"当前版本 {__version__}" in status
 
 

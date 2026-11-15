@@ -2,6 +2,27 @@
 
 本文件记录 lat 的版本变更。开发文档只保留本文件与 [MODULE_STATUS.md](MODULE_STATUS.md)；面向用户的使用说明见 [README.md](../README.md)，逐模块手册见 [manual/](manual/README.md)。
 
+## [1.1.0] — 2026-11-15
+
+新增交互终端下的自动更新提示；只提示，不自动安装。
+
+### 新增
+
+- `lat` 启动时读取本地缓存，发现新版本就在 stderr 打印一行提示；缓存过期后在后台线程检查，
+  单源超时 1.5 秒，不阻塞命令、不影响退出码。
+- 多源检查：PyPI JSON、`PIP_INDEX_URL`、`LAT_UPDATE_URL`（JSON）与 `LAT_UPDATE_INDEX`
+  （PEP 503 简单索引），取所有源中的最高版本。
+- 缓存位于 `$XDG_CACHE_HOME/lat/update.json`，同一提示默认 24 小时内只打印一次。
+- 新增 `lat --check-update`（显式同步检查）与 `lat --no-update-check`（单次跳过）。
+- 关闭方式：`LAT_NO_UPDATE_CHECK=1` 或配置 `update.enabled: false`；非交互终端、CI、
+  `--version`、`-h`、`describe` 自动跳过。
+- 单元测试覆盖 JSON/简单索引解析、多源取最高、缓存提示去重、超时/离线、禁用开关。
+
+### 变更
+
+- 版本号 1.0.0 → 1.1.0；配置文件 `meta.version` 与 README/手册同步。
+- 更新检查只读取版本号，不下载、不执行远程内容；升级仍由用户通过 pip/uv 完成。
+
 ## [1.0.0] — 2026-11-15
 
 首个公开发布版本。

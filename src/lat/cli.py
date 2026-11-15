@@ -86,7 +86,7 @@ def _parse_types_file(path) -> dict[int, str]:
     return mapping
 
 
-def _run_plot(kind: str, argv) -> int:
+def _run_plot(kind: str, argv, *, no_update: bool = False) -> int:
     parser = argparse.ArgumentParser(prog=f"lat {kind}")
     parser.add_argument("-f", dest="csv", required=True,
                         help="lat output CSV (header carries title/xlabel/ylabel/columns)")
@@ -107,6 +107,10 @@ def _run_plot(kind: str, argv) -> int:
     from .plotting import plot1d, plot2d
 
     cfg = load_config()
+    if not no_update:
+        from .update import maybe_notify
+
+        maybe_notify(cfg)
     smooth = args.smooth or str(cfg.get("plot.smooth", default="none") or "none")
     sm = {
         "window": int(cfg.get("plot.savgol_window", default=5) or 5),
@@ -135,17 +139,28 @@ def _apply_config_paths(cfg) -> None:
 
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    no_update = "--no-update-check" in argv
+    if no_update:
+        argv = [item for item in argv if item != "--no-update-check"]
     if not argv or argv[0] in ("-h", "--help", "help"):
         _top_help()
         return 0
     if argv[0] in ("-V", "--version"):
         print(f"lat {__version__}")
         return 0
+    if argv[0] == "--check-update":
+        from .update import force_check
+
+        try:
+            cfg = load_config()
+        except LatError:
+            cfg = None
+        return force_check(cfg)
 
     module_name = argv[0]
     if module_name in ("plot1d", "plot2d"):
         try:
-            return _run_plot(module_name, argv[1:])
+            return _run_plot(module_name, argv[1:], no_update=no_update)
         except LatError as exc:
             print(f"[lat ERROR] {exc}", file=sys.stderr)
             return 1
@@ -162,6 +177,11 @@ def main(argv=None) -> int:
             logger.level = "info"
         elif cfg.get("logger.level"):
             logger.level = str(cfg.get("logger.level"))
+
+        if not no_update and module_name != "describe":
+            from .update import maybe_notify
+
+            maybe_notify(cfg)
 
         command = "lat " + " ".join(argv)
         _execute(cls, args, cfg, command)
@@ -264,6 +284,9 @@ def _top_help() -> None:
     print("  plot1d       plot a 1D CSV")
     print("  plot2d       plot a 2D CSV")
     print("\n  describe -module <name>   show a module's parameters and contract")
+    print("\nupdate:")
+    print("  --check-update              check PyPI and other configured sources now")
+    print("  --no-update-check           skip the automatic update notice for this run")
 
 
 if __name__ == "__main__":

@@ -174,6 +174,26 @@ MDAnalysis 风格子集，支持 `and`、`or`、`not` 与括号；相邻关键�
 | `LAT_VENV` | `install.sh` 创建的虚拟环境路径 |
 | `LAT_BIN` | `install.sh` 放置 `lat` 的目录 |
 | `PYTHON` | `install.sh` 使用的解释器 |
+| `LAT_NO_UPDATE_CHECK` | 设为 `1` 关闭自动更新检查 |
+| `LAT_UPDATE_URL` | 自定义 JSON 版本端点 |
+| `LAT_UPDATE_INDEX` | 自定义 PEP 503 简单索引（如内网镜像） |
+| `LAT_UPDATE_INTERVAL_HOURS` | 覆盖检查间隔（默认 24 小时） |
+| `LAT_UPDATE_TIMEOUT_S` | 覆盖单源网络超时（默认 1.5 秒） |
+
+## 更新检查
+
+lat 在交互终端启动时做一次**只提示、不安装**的版本检查：
+
+- 默认每 24 小时最多检查一次；结果缓存在 `$XDG_CACHE_HOME/lat/update.json`。
+- 检查在后台线程执行，单源超时 1.5 秒，不阻塞命令，也不影响退出码。
+- 同时查询 PyPI、`PIP_INDEX_URL`、`LAT_UPDATE_URL` / `LAT_UPDATE_INDEX`，取最高版本。
+- 只在 stderr 打印一行提示，例如：
+  `[lat NOTICE] new version 1.2.0 available (current 1.1.0); upgrade with: pip install -U lammps-analysis-tools`
+- 非交互终端、`CI` 环境、`--version` / `-h` / `describe` 自动跳过。
+- 关闭：`LAT_NO_UPDATE_CHECK=1`，或配置 `update.enabled: false`。
+- 手动检查：`lat --check-update`；单次跳过：`lat --no-update-check <module> ...`。
+
+lat 不会自动下载或执行任何更新；升级始终由你通过 pip/uv 完成。
 
 ## 文档
 

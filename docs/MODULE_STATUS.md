@@ -8,7 +8,7 @@
 - beta：可用，但边界条件或数值口径仍可能调整。
 - planned：已设计、未实现；不得在文档或 CLI 中宣称可用。
 
-当前版本 1.0.0。全部已注册模块均为 stable。
+当前版本 1.1.0。全部已注册模块均为 stable。
 
 ## 模块总表
 
@@ -33,6 +33,7 @@
 | describe | stable | 0.1.0 | 不需要 | 屏幕输出 | test_cli_contract |
 | plot1d | stable | 0.1.0 | 不需要 | 图片 | test_plot1d、test_cli_contract |
 | plot2d | stable | 0.1.0 | 不需要 | 图片 | test_plot1d |
+| update | stable | 1.1.0 | 不需要 | stderr 版本提示 + 本地缓存 | test_update |
 
 ## 已固定的行为基线
 
@@ -45,6 +46,7 @@
 7. 输出文件名 <base>.<tag>[.<mode>].out.csv；同名文件先备份为 .bak.N；CSV 头字段固定。
 8. 默认值只来自 config/lat.yaml；代码不得为物理参数提供备用默认值。源码配置与包内配置逐字节一致（test_config_sync）。
 9. 所有模块参数必须有 help 文本；docs/manual 的参数表由 lat.docs.render_param_table 生成，并由 test_manuals 静态校验。
+10. 更新检查只读版本号，不下载/不执行远程内容；默认仅在交互终端、最多每 24 小时检查一次，缓存写 $XDG_CACHE_HOME/lat/update.json；任何网络失败都不得影响命令退出码。
 
 ## 已知限制
 
@@ -67,6 +69,7 @@
 | occupancy | 不支持按分子体积自动生成 zone；区域越界按交集计体积；少于 2 帧时穿越无意义。 |
 | select | resname/name/resid 仅适用于 GROMACS 拓扑；mol 需要分子 ID。 |
 | plot1d/plot2d | 依赖 matplotlib；-bar/-stack 互斥且不做平滑；plot2d 不接受 -columns/-bar/-stack。 |
+| update | 依赖外部索引可达；内网镜像可能滞后，因此会同时查询多个源并取最高版本；只提示，不自动升级。 |
 
 ## 未提供 / 规划
 

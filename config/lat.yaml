@@ -8,7 +8,7 @@
 # =============================================================================
 
 meta:
-  version: 1.0.0
+  version: 1.1.0
   frame_interval: null       # 帧间距(ps)，仅用于“换算展示”寿命/滞留；null=只报帧数
 
 io:
@@ -43,6 +43,13 @@ logger:
   # 全部输出到 stderr，绝不污染 stdout/CSV。
   level: warning             # 默认只报 WARNING/ERROR；INFO 需 -v 才出
   stream: stderr
+
+update:
+  enabled: true              # 交互终端下启动时检查；LAT_NO_UPDATE_CHECK=1 关闭
+  interval_hours: 24         # 同一检查结果/提示的缓存周期
+  timeout_s: 1.5             # 单源网络超时；后台线程，不阻塞命令
+  sources:                   # 取所有源中的最高版本；可追加自定义 JSON/简单索引
+    - https://pypi.org/pypi/lammps-analysis-tools/json
 
 # vdW 半径（按元素符号，Å），freevol/sasa 用。
 # 来源：reax_tools 的 ELEMENT_ATOMIC_RADII（Bondi 型）
